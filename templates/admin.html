@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>ADMIN</title>
+        <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+        <!-- <script type="text/javascript" charset="utf-8">
+            $(document).ready(function() {
+                namespace = '/admin';
+                var socket = io(namespace);
+                socket.on('connect', function() {
+                    socket.emit('my_event', {data: 'connected to the SocketServer as admin'});
+                });
+
+            });
+            $('form#send_command').submit(function(command){
+                socket.emit("command", {data:$('#emit_command').val()});
+                return false;
+            });
+        </script> -->
+    </head>
+    <body>
+        <h1 style="background-color:white;">ADMIN</h1>
+        <form id="send_command" method="POST" action='#'>
+            <input type="text" size=100  multiline name="emit_command" id="emit_command" placeholder="Please enter command">
+            <input type="submit" value="Send command">
+        </form>
+    </body>
+</html>
