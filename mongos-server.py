@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit
-
+import mongodb_funtions as mf
 # define app
 app = Flask(__name__, template_folder="templates", static_folder = "statics")
 async_mode = None
@@ -12,13 +12,6 @@ db = client['DSCI551']
 
 # get list of collections in database
 collections = db.list_collection_names()
-
-def command_process(command):
-    parsed_command = command.split(" ")
-    print(parsed_command)
-    if parsed_command[0].lower() != "curl":
-        return "Invalid Command: only accept curl command"
-    return parsed_command
 
 @app.route('/')
 def index():
@@ -40,7 +33,7 @@ def admin_page():
 @app.route("/handle_command", methods=["POST"])
 def handle_command():
     command = request.form["command"]
-    results = command_process(command)
+    results = mf.command_process(command)
     return(str(results))
 
 # run app
