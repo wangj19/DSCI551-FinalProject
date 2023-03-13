@@ -3,6 +3,7 @@ import validators
 import json
 
 command_list = ["GET"]
+
 ## TODO: get document from db
 ## Currently able to display entire mongodb or a single db
 def process_GET(url):
