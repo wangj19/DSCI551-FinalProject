@@ -3,7 +3,10 @@ import validators
 import json
 
 command_list = ["GET"]
+## TODO: get document from db
+## Currently able to display entire mongodb or a single db
 def process_GET(url):
+    
     try:
         parsed_url = url.split("/")
         #print(str(parsed_url))
@@ -18,24 +21,54 @@ def process_GET(url):
 
         if len(parsed_url) == 1:
             ## untested code -- currently unreachable part
-            output = dict((db, [collection for collection in client[db].collection_names()]) for db in client.database_names())
-            return output
+            output = dict()
+            for db_name in client.list_database_names():
+                db_content = dict()
+                print(db_name)
+                db = client[db_name]
+                for col_name in db.list_collection_names():
+                    col_content = dict()
+                    print(col_name)
+                    for document in db[col_name].find({}):
+                        col_content.update(document)
+                        print(document)
+                    db_content.update({col_name:col_content})
+                output.update({db_name:db_content})
+            return str(output)
+            # output = dict((db, [collection for collection in client[db].collection_names()]) for db in client.database_names())
+            # return output
         elif len(parsed_url) == 2:
-            ## TODO
+
             if parsed_url[1] == "":
                 output = dict()
-                for db_name in client.database_names():
+                for db_name in client.list_database_names():
+                    db_content = dict()
+                    print(db_name)
                     db = client[db_name]
                     for col_name in db.list_collection_names():
-                        for document in db[col_name]:
+                        col_content = dict()
+                        print(col_name)
+                        for document in db[col_name].find({}):
+                            col_content.update(document)
                             print(document)
-                return output
+                        db_content.update({col_name:col_content})
+                    output.update({db_name:db_content})
+                return str(output)
             else:
+                db_content = dict()
                 db = client[parsed_url[1]]
-        return str(parsed_url)
-    except:
+                for col_name in db.list_collection_names():
+                    col_content = dict()
+                    print(col_name)
+                    for document in db[col_name].find({}):
+                        col_content.update(document)
+                        print(document)
+                    db_content.update({col_name:col_content})
+                output = dict({parsed_url[1]:db_content})
+        return str(output)
+    except Exception as e:
         print("error occurs")
-        return "Invalid Commnad: error occurs"
+        return "Invalid Command: " + str(e)
 
 def command_process(command):
     parsed_command = command.split(" ")
