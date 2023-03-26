@@ -5,9 +5,8 @@ import json
 command_list = ["GET"]
 
 ## TODO: get document from db
-## Currently able to display entire mongodb or a single db
+## Currently can do get command without filter
 def process_GET(url):
-    
     try:
         parsed_url = url.split("/")
         #print(str(parsed_url))
@@ -21,7 +20,8 @@ def process_GET(url):
         client = MongoClient(address, int(port))
 
         if len(parsed_url) == 1:
-            ## untested code -- currently unreachable part
+            # only enter localhost or IP address end with .json -- invalid url form
+            ## untested code -- currently unreachable
             output = dict()
             for db_name in client.list_database_names():
                 db_content = dict()
@@ -36,36 +36,61 @@ def process_GET(url):
                     db_content.update({col_name:col_content})
                 output.update({db_name:db_content})
             return str(output)
-            # output = dict((db, [collection for collection in client[db].collection_names()]) for db in client.database_names())
-            # return output
-        elif len(parsed_url) == 2:
 
+        elif len(parsed_url) == 2:
+            # Input the IP address and empty database name, return entire MongoDB
+            # curl -X GET "http://localhost:27017/.json"
             if parsed_url[1] == "":
                 output = dict()
                 for db_name in client.list_database_names():
                     db_content = dict()
-                    print(db_name)
                     db = client[db_name]
                     for col_name in db.list_collection_names():
-                        col_content = dict()
-                        print(col_name)
+                        col_content = []
                         for document in db[col_name].find({}):
-                            col_content.update(document)
-                            print(document)
+                            col_content.append(document)
+                            # print(document)
                         db_content.update({col_name:col_content})
                     output.update({db_name:db_content})
                 return str(output)
+            # input the IP address and database name, return entire database
+            # curl -X GET "http://localhost:27017/DSCI551.json"
             else:
                 db_content = dict()
                 db = client[parsed_url[1]]
                 for col_name in db.list_collection_names():
-                    col_content = dict()
-                    print(col_name)
+                    col_content = []
                     for document in db[col_name].find({}):
-                        col_content.update(document)
-                        print(document)
+                        col_content.append(document)
+                        # print(document)
                     db_content.update({col_name:col_content})
                 output = dict({parsed_url[1]:db_content})
+            # input IP address, database name, and collection name, return entire collection
+        elif len(parsed_url) == 3:
+            db = client[parsed_url[1]]
+            content = []
+            for document in db[parsed_url[2]].find({}):
+                content.append(document)
+            return content
+        else:
+            json_keys = parsed_url[3:]
+            db = client[parsed_url[1]]
+            content = []
+            for document in db[parsed_url[2]].find({}):
+                item = document
+                print(item)
+                print(json_keys)
+                for key in json_keys:
+                    print(key)
+                    if type(item) == dict:
+                        temp = item[key]
+                        item = temp
+                    else:
+                        item = None
+                        break
+                if item is not None:
+                    content.append(item)
+            return content
         return str(output)
     except Exception as e:
         print("error occurs")
@@ -79,7 +104,7 @@ def command_process(command):
     if parsed_command[1].lower() != "-x":
         return "Invalid Command: invalid option, please enter \"-X\" option"
     if parsed_command[2].upper() not in command_list:
-        return "Invalid Command: only accept GET, POST, PATCH, DELETE command"
+        return "Invalid Command: only accept GET, , PUT, POST, PATCH, DELETE command"
     if not ((parsed_command[3][0]=="\'" and parsed_command[3][-1]=="\'") or (parsed_command[3][0]=="\"" and parsed_command[3][-1]=="\"")):
         return "Invalid Command: please enter url with parenthesis"
     if not validators.url(parsed_command[3][1:-2]):
@@ -90,4 +115,16 @@ def command_process(command):
         return "Invalid Command: enter url starts with \'http://\' and ends with \'.json\'"
     if parsed_command[2].upper() == "GET":
         return process_GET(url[7:-5])
+    elif parsed_command[2].upper() == "POST":
+        # TODO: handle post command
+        return parsed_command
+    elif parsed_command[2].upper() == "PUT":
+        # TODO: handle post command
+        return parsed_command
+    elif parsed_command[2].upper() == "PATCH":
+        # TODO: handle post command
+        return parsed_command
+    elif parsed_command[2].upper() == "DELETE":
+        # TODO: handle post command
+        return parsed_command
     return parsed_command
