@@ -13,6 +13,9 @@ def process_GET(url, conditions):
         # Process filter conditions for GET command
         orderByIndex = None
         orderByFlag = False
+        startValue = None
+        endValue = None
+        equalValue = None
         sortOrder = 0
         limitToNumber = None
         current_cond_key = []
@@ -44,7 +47,8 @@ def process_GET(url, conditions):
                     filter_value = float(filter_value)
                 else:
                     filter_value = int(filter_value)
-                # start to handle filters
+                
+                # start to handle filter conditions
                 if filter_key == "orderBy":
                     orderByFlag = True
                     orderByIndex = filter_value
@@ -68,8 +72,14 @@ def process_GET(url, conditions):
                     else:
                         sortOrder = -1
                         limitToNumber = filter_value
+                elif filter_key == "startAt":
+                    startValue = filter_value
+                elif filter_key == "endAt":
+                    endValue = filter_value
+                elif filter_key == "equalTo":
+                    equalValue == filter_value
                 else:
-                    print("TODO")
+                    return "Invalid Command: invalid filter condition"
                     
 
                 print(filter_value)
@@ -97,7 +107,7 @@ def process_GET(url, conditions):
                 for col_name in db.list_collection_names():
                     col_content = dict()
                     print(col_name)
-                    for document in db[col_name].find({}):
+                    for document in db[col_name].find({},{"_id":0}):
                         col_content.update(document)
                         print(document)
                     db_content.update({col_name:col_content})
@@ -115,7 +125,7 @@ def process_GET(url, conditions):
                     for col_name in db.list_collection_names():
                         col_content = []
                         
-                        for document in db[col_name].find({}):
+                        for document in db[col_name].find({},{"_id":0}):
                             col_content.append(document)
                             # print(document)
                         db_content.update({col_name:col_content})
@@ -128,7 +138,7 @@ def process_GET(url, conditions):
                 db = client[parsed_url[1]]
                 for col_name in db.list_collection_names():
                     col_content = []
-                    for document in db[col_name].find({}):
+                    for document in db[col_name].find({},{"_id":0}):
                         col_content.append(document)
                         # print(document)
                     db_content.update({col_name:col_content})
@@ -137,25 +147,27 @@ def process_GET(url, conditions):
         elif len(parsed_url) == 3:
             db = client[parsed_url[1]]
             content = []
-            for document in db[parsed_url[2]].find({}):
+            for document in db[parsed_url[2]].find({},{"_id":0}):
                 content.append(document)
             return content
         else:
             json_keys = parsed_url[3:]
             db = client[parsed_url[1]]
-            content = []
-            for document in db[parsed_url[2]].find({}):
-                item = document
-                for key in json_keys:
-                    print(key)
-                    if type(item) == dict:
-                        temp = item[key]
-                        item = temp
-                    else:
-                        item = None
-                        break
-                if item is not None:
-                    content.append(item)
+            content = None
+            documents = dict()
+            for document in db[parsed_url[2]].find({},{"_id":0}):
+                documents.update(document)
+            item = documents
+            for key in json_keys:
+                ##print(key)
+                if type(item) == dict:
+                    temp = item[key]
+                    item = temp
+                else:
+                    item = None
+                    break
+            if item is not None:
+                content = item
             return content
         return str(output)
     except Exception as e:
