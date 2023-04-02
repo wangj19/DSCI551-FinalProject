@@ -6,6 +6,20 @@ command_list = ["GET", "PUT", "POST", "PATCH", "DELETE"]
 filter_conds_list = ["orderBy", "limitToFirst", "limitToLast", "equalTo", "startAt", "endAt"]
 
 
+## helper function -- input a dict and a path/list of keys, return the value corresponding to the path/list of keys in the list
+def dict_keys_helper(dict_, keys):
+    if not isinstance(dict_, dict):
+        return dict_
+    output = dict_
+    for key in keys:
+        if key in list(output.keys()):
+            temp = output[key]
+            output = temp
+    return output
+
+    
+
+
 ## helper function -- help GET command to product appropriate output of filter condition
 def filter_process(content, condition_query):
     orderBy = condition_query["orderBy"]  
@@ -14,6 +28,7 @@ def filter_process(content, condition_query):
     endAt = condition_query["endAt"]
     equalTo = condition_query["equalTo"]
     output = content
+    # process filter without orderby condition
     if orderBy is None:
         if limitValue is not None:
             if abs(limitValue) >= len(output):
@@ -22,6 +37,7 @@ def filter_process(content, condition_query):
                 output = output[:limitValue]
             elif limitValue < 0:
                 output = output[limitValue:]
+    # process orderby $key
     # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='$Key'"
     elif orderBy.lower() == "$key":
         output = sorted(output, key = lambda x: list(x.keys())[0])
@@ -32,8 +48,8 @@ def filter_process(content, condition_query):
         if startAt is not None:
             temp = [document for document in output if list(document.keys())[0] >= startAt]
             output = temp
-        if startAt is not None:
-            temp = [document for document in output if list(document.keys())[0] =< endAt]
+        if endAt is not None:
+            temp = [document for document in output if list(document.keys())[0] <= endAt]
             output = temp
         if limitValue is not None:
             if abs(limitValue) >= len(output):
@@ -42,6 +58,88 @@ def filter_process(content, condition_query):
                 output = output[:limitValue]
             elif limitValue < 0:
                 output = output[limitValue:]
+    #process orderby $value
+    #curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='$value'
+    elif orderBy.lower() == "$value":
+        can_sort = []
+        non_sort = []
+        for x in output:
+            if isinstance(x[list(x.keys())[0]], dict) or x[list(x.keys())[0]] is None:
+                non_sort.append(x)
+            else:
+                can_sort.append(x)
+        can_sort = sorted(can_sort, key=lambda x: x[list(x.keys())[0]])
+        output = can_sort
+        if equalTo is not None:
+            temp = [document for document in output if document[list(document.keys())[0]] == equalTo]
+            output = temp
+        if startAt is not None:
+            temp = [document for document in output if document[list(document.keys())[0]] >= startAt]
+            output = temp
+        if endAt is not None:
+            temp = [document for document in output if document[list(document.keys())[0]] <= endAt]
+            output = temp
+        output += non_sort
+        if limitValue is not None:
+            if abs(limitValue) >= len(output):
+                pass
+            elif limitValue > 0:
+                output = output[:limitValue]
+            elif limitValue < 0:
+                output = output[limitValue:]
+    #handle filter orderby a specific key or path of keys
+    #curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&endAt=30&limitToLast=3"
+    else:
+        can_sort = []
+        non_sort = []
+        paths = orderBy.split("/")
+        #print(paths)
+        for x in output:
+            if isinstance(x[list(x.keys())[0]], dict):
+                existFlag = True
+                temp = x[list(x.keys())[0]]
+                for p in paths:
+                    if not isinstance(temp, dict):
+                        existFlag = False
+                        #print("break")
+                        break
+                    if p in list(temp.keys()):
+                        temp = temp[p]
+                        print(temp)
+                    else:
+                        existFlag = False
+                        #print("break")
+                        break
+                if isinstance(temp, dict):
+                    existFlag = False
+                #print(existFlag)
+                if existFlag:
+                    can_sort.append(x)
+                else:
+                    non_sort.append(x)
+            else:
+                non_sort.append(x)
+        can_sort = sorted(can_sort, key=lambda x: dict_keys_helper(x[list(x.keys())[0]], paths))
+        print(can_sort)
+        output = can_sort
+        if equalTo is not None:
+            temp = [document for document in output if dict_keys_helper(document[list(document.keys())[0]], paths) == equalTo]
+            output = temp
+        if startAt is not None:
+            temp = [document for document in output if dict_keys_helper(document[list(document.keys())[0]], paths) >= startAt]
+            output = temp
+        if endAt is not None:
+            temp = [document for document in output if dict_keys_helper(document[list(document.keys())[0]], paths) <= endAt]
+            output = temp
+        output += non_sort
+        if limitValue is not None:
+            if abs(limitValue) >= len(output):
+                pass
+            elif limitValue > 0:
+                output = output[:limitValue]
+            elif limitValue < 0:
+                output = output[limitValue:]
+
     return output
 
 ## TODO: get document from db
@@ -100,9 +198,9 @@ def process_GET(url, conditions):
                         limitOrder = 1
                         limitToNumber = filter_value
                         condition_query.update({"limitValue": limitOrder * limitToNumber})
-                elif filter_key == "limitToFirst":
+                elif filter_key == "limitToLast":
                     if limitOrder > 0 :
-                        return "Invalid Command: cannot enter limitToFirst and limitToLast together"
+                        return "Invalid Command: cannot enter limitToFirst and limitToFirst together"
                     elif not isinstance(filter_value, int):
                         return "Invalid Command: limitToLast only accepts integer"
                     else:
