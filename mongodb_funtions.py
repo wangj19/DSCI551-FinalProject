@@ -5,6 +5,45 @@ import json
 command_list = ["GET", "PUT", "POST", "PATCH", "DELETE"]
 filter_conds_list = ["orderBy", "limitToFirst", "limitToLast", "equalTo", "startAt", "endAt"]
 
+
+## helper function -- help GET command to product appropriate output of filter condition
+def filter_process(content, condition_query):
+    orderBy = condition_query["orderBy"]  
+    limitValue = condition_query["limitValue"]
+    startAt = condition_query["startAt"]
+    endAt = condition_query["endAt"]
+    equalTo = condition_query["equalTo"]
+    output = content
+    if orderBy is None:
+        if limitValue is not None:
+            if abs(limitValue) >= len(output):
+                pass
+            elif limitValue > 0:
+                output = output[:limitValue]
+            elif limitValue < 0:
+                output = output[limitValue:]
+    # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='$Key'"
+    elif orderBy.lower() == "$key":
+        output = sorted(output, key = lambda x: list(x.keys())[0])
+        #curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='$Key'&equalTo='0987654321'"
+        if equalTo is not None:
+            temp = [document for document in output if list(document.keys())[0] == equalTo]
+            output = temp
+        if startAt is not None:
+            temp = [document for document in output if list(document.keys())[0] >= startAt]
+            output = temp
+        if startAt is not None:
+            temp = [document for document in output if list(document.keys())[0] =< endAt]
+            output = temp
+        if limitValue is not None:
+            if abs(limitValue) >= len(output):
+                pass
+            elif limitValue > 0:
+                output = output[:limitValue]
+            elif limitValue < 0:
+                output = output[limitValue:]
+    return output
+
 ## TODO: get document from db
 ## Currently can do get command without filter
 def process_GET(url, conditions):
@@ -12,14 +51,14 @@ def process_GET(url, conditions):
         # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&limitToFirst=5"
         # Process filter conditions for GET command
         orderByIndex = None
-        orderByFlag = False
         startValue = None
         endValue = None
         equalValue = None
-        sortOrder = 0
+        limitOrder = 0
         limitToNumber = None
         current_cond_key = []
-        find_query = dict()
+        condition_query = dict({"orderBy": orderByIndex, "limitValue": limitToNumber, "startAt": startValue, 
+                                "endAt": endValue, "equalTo": equalValue})
         if conditions is not None:
             for cond in conditions.split("&"):
                 #check if the filter format is valid
@@ -50,40 +89,41 @@ def process_GET(url, conditions):
                 
                 # start to handle filter conditions
                 if filter_key == "orderBy":
-                    orderByFlag = True
                     orderByIndex = filter_value
+                    condition_query.update({"orderBy": orderByIndex})
                 elif filter_key == "limitToFirst":
-                    if orderByFlag is not True:
-                        return "Invalid Command: please enter orderBy condition first"
-                    elif sortOrder < 0 :
+                    if limitOrder < 0 :
                         return "Invalid Command: cannot enter limitToFirst and limitToLast together"
-                    elif type(filter_value):
+                    elif not isinstance(filter_value, int):
                         return "Invalid Command: limitToFirst only accepts integer"
                     else:
-                        sortOrder = 1
+                        limitOrder = 1
                         limitToNumber = filter_value
+                        condition_query.update({"limitValue": limitOrder * limitToNumber})
                 elif filter_key == "limitToFirst":
-                    if orderByFlag is not True:
-                        return "Invalid Command: please enter orderBy condition first"
-                    elif sortOrder > 0 :
+                    if limitOrder > 0 :
                         return "Invalid Command: cannot enter limitToFirst and limitToLast together"
-                    elif type(filter_value):
+                    elif not isinstance(filter_value, int):
                         return "Invalid Command: limitToLast only accepts integer"
                     else:
-                        sortOrder = -1
+                        limitOrder = -1
                         limitToNumber = filter_value
+                        condition_query.update({"limitValue": limitOrder * limitToNumber})
                 elif filter_key == "startAt":
                     startValue = filter_value
+                    condition_query.update({"startAt": startValue})
                 elif filter_key == "endAt":
                     endValue = filter_value
+                    condition_query.update({"endAt": endValue})
                 elif filter_key == "equalTo":
-                    equalValue == filter_value
+                    equalValue = filter_value
+                    condition_query.update({"equalTo": equalValue})
                 else:
                     return "Invalid Command: invalid filter condition"
+                
+                # print(filter_key)
+                # print(filter_value)
                     
-
-                print(filter_value)
-                print(type(filter_value))
         
         ## Get address and port to establish connection to mongodb
         parsed_url = url.split("/")
@@ -144,19 +184,22 @@ def process_GET(url, conditions):
                     db_content.update({col_name:col_content})
                 output = dict({parsed_url[1]:db_content})
         # input IP address, database name, and collection name, return entire collection
+        # curl -X GET "http://localhost:27017/DSCI551/books.json"
         elif len(parsed_url) == 3:
             db = client[parsed_url[1]]
             content = []
             for document in db[parsed_url[2]].find({},{"_id":0}):
                 content.append(document)
-            return content
+            return filter_process(content, condition_query)
+        # curl -X GET "http://localhost:27017/DSCI551/books/1234567890.json"
+        # curl -X GET "http://localhost:27017/DSCI551/books/1234567890/price.json"
         else:
             json_keys = parsed_url[3:]
             db = client[parsed_url[1]]
             content = None
-            documents = dict()
+            documents = []
             for document in db[parsed_url[2]].find({},{"_id":0}):
-                documents.update(document)
+                documents.append(document)
             item = documents
             for key in json_keys:
                 ##print(key)
