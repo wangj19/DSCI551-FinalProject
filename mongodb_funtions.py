@@ -27,7 +27,18 @@ def filter_process(content, condition_query):
     startAt = condition_query["startAt"]
     endAt = condition_query["endAt"]
     equalTo = condition_query["equalTo"]
-    output = content
+    output = []
+    if content is None:
+        return ""
+    elif not hasattr(content, '__iter__'):
+        return ""
+    elif isinstance(content, dict):
+        for item in content.items():
+            document = {item[0]: item[1]}
+            output.append(document)
+    else:
+        output = content
+
     # process filter without orderby condition
     if orderBy is None:
         if limitValue is not None:
@@ -120,7 +131,6 @@ def filter_process(content, condition_query):
             else:
                 non_sort.append(x)
         can_sort = sorted(can_sort, key=lambda x: dict_keys_helper(x[list(x.keys())[0]], paths))
-        print(can_sort)
         output = can_sort
         if equalTo is not None:
             temp = [document for document in output if dict_keys_helper(document[list(document.keys())[0]], paths) == equalTo]
@@ -139,8 +149,11 @@ def filter_process(content, condition_query):
                 output = output[:limitValue]
             elif limitValue < 0:
                 output = output[limitValue:]
+    output_dict = dict()
+    for document in output:
+        output_dict.update(document)
 
-    return output
+    return output_dict
 
 ## TODO: get document from db
 ## Currently can do get command without filter
@@ -244,13 +257,11 @@ def process_GET(url, conditions):
                 db = client[db_name]
                 for col_name in db.list_collection_names():
                     col_content = dict()
-                    print(col_name)
                     for document in db[col_name].find({},{"_id":0}):
                         col_content.update(document)
-                        print(document)
                     db_content.update({col_name:col_content})
                 output.update({db_name:db_content})
-            return str(output)
+            return output
 
         elif len(parsed_url) == 2:
             # Input the IP address and empty database name, return entire MongoDB
@@ -261,26 +272,26 @@ def process_GET(url, conditions):
                     db_content = dict()
                     db = client[db_name]
                     for col_name in db.list_collection_names():
-                        col_content = []
+                        col_content = dict()
                         
                         for document in db[col_name].find({},{"_id":0}):
-                            col_content.append(document)
-                            # print(document)
+                            col_content.update(document)
                         db_content.update({col_name:col_content})
                     output.update({db_name:db_content})
-                return str(output)
+                return filter_process(output,condition_query)
             # input the IP address and database name, return entire database
             # curl -X GET "http://localhost:27017/DSCI551.json"
             else:
                 db_content = dict()
                 db = client[parsed_url[1]]
                 for col_name in db.list_collection_names():
-                    col_content = []
+                    col_content = dict()
                     for document in db[col_name].find({},{"_id":0}):
-                        col_content.append(document)
+                        col_content.update(document)
                         # print(document)
                     db_content.update({col_name:col_content})
                 output = dict({parsed_url[1]:db_content})
+                return filter_process(output,condition_query)
         # input IP address, database name, and collection name, return entire collection
         # curl -X GET "http://localhost:27017/DSCI551/books.json"
         elif len(parsed_url) == 3:
@@ -295,12 +306,11 @@ def process_GET(url, conditions):
             json_keys = parsed_url[3:]
             db = client[parsed_url[1]]
             content = None
-            documents = []
+            documents = dict()
             for document in db[parsed_url[2]].find({},{"_id":0}):
-                documents.append(document)
+                documents.update(document)
             item = documents
             for key in json_keys:
-                ##print(key)
                 if type(item) == dict:
                     temp = item[key]
                     item = temp
@@ -309,10 +319,11 @@ def process_GET(url, conditions):
                     break
             if item is not None:
                 content = item
-            return content
+            # return content
+            return filter_process(content, condition_query)
         return str(output)
     except Exception as e:
-        print("error occurs")
+        print("Invalid Command:", str(e))
         return "Invalid Command: " + str(e)
 
 
