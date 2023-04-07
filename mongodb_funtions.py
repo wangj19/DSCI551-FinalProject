@@ -240,6 +240,7 @@ def process_GET(url, conditions):
         parsed_url = url.split("/")
         address = "localhost"
         port = 27017
+        # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&limitToFirst=5"
 
         if len(parsed_url[0].split(":"))==2:
             address = parsed_url[0].split(":")[0]
@@ -257,10 +258,10 @@ def process_GET(url, conditions):
                 db = client[db_name]
                 for col_name in db.list_collection_names():
                     col_content = dict()
-                    for document in db[col_name].find({},{"_id":0}):
+                    for document in db[col_name].find({}, {"_id":0}):
                         col_content.update(document)
-                    db_content.update({col_name:col_content})
-                output.update({db_name:db_content})
+                    db_content.update({col_name: col_content})
+                output.update({db_name: db_content})
             return output
 
         elif len(parsed_url) == 2:
@@ -330,6 +331,7 @@ def process_GET(url, conditions):
 # High-level function for command processing
 def command_process(command):
     # parse command by spaces
+    # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&limitToFirst=5"
     parsed_command = command.split(" ")
     print(parsed_command)
 
@@ -375,9 +377,12 @@ def command_process(command):
         return parsed_command
     elif parsed_command[2].upper() == "PUT":
         # TODO: handle post command
-        print("hello world")
         return parsed_command
     elif parsed_command[2].upper() == "PATCH":
+        # If data does not exist, InsertOne. if data exist, updateOne.
+        # check if there is -d for data insertion,
+        # always check if after -d there is "'{"
+        # check key, because key must be STRING and no need to check value because it can be anything
         # TODO: handle post command
         return parsed_command
     elif parsed_command[2].upper() == "DELETE":
