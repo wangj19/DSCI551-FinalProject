@@ -375,6 +375,7 @@ def command_process(command):
         return parsed_command
     elif parsed_command[2].upper() == "PUT":
         # TODO: handle post command
+        print("hello world")
         return parsed_command
     elif parsed_command[2].upper() == "PATCH":
         # TODO: handle post command
