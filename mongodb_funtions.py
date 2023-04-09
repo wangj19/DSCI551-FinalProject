@@ -337,7 +337,7 @@ def process_DELETE(url):
     if len(parsed_url) == 1:
         # only enter localhost or IP address end with .json -- invalid url form
         ## untested code -- currently unreachable
-        ## localhost:27017.json would be identified as invalid json
+        ## http://localhost:27017.json would be identified as invalid json
         return "Whole MongoDB DELETE"
 
     elif len(parsed_url) == 2:
@@ -346,12 +346,27 @@ def process_DELETE(url):
         ## curl -X DELETE "http://localhost:27017/test.json"
         else:
             client.drop_database(parsed_url[1])
-            return "DELETE database " + parsed_url[1]
+    ## curl -X DELETE "http://localhost:27017/test/test.json"
     elif len(parsed_url) == 3:
         db = client[parsed_url[1]]
         db.drop_collection(parsed_url[2])
-        return "DELETE collection " + parsed_url[2]
-    return url
+    ## curl -X DELETE "http://localhost:27017/test/test/1234567890.json"
+    elif len(parsed_url) == 4:
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        primary_key = parsed_url[3]
+        collection.delete_one({ primary_key : { '$exists' : True }})
+    ## curl -X DELETE "http://localhost:27017/test/test/1234567890/price.json"
+    else:
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        primary_key = parsed_url[3]
+        to_remove = primary_key
+        for k in parsed_url[4:]:
+            to_remove = to_remove + "." + k
+        print(to_remove)
+        collection.update_one({primary_key : { '$exists' : True }}, {'$unset': {f'{to_remove}':1}})
+    return "DELETE http://" + url + ".json"
 
 # High-level function for command processing
 def command_process(command):
