@@ -380,6 +380,7 @@ def command_process(command):
         return parsed_command
     elif parsed_command[2].upper() == "PATCH":
         # If data does not exist, InsertOne. if data exist, updateOne.
+
         # check if there is -d for data insertion,
         # always check if after -d there is "'{"
         # check key, because key must be STRING and no need to check value because it can be anything
