@@ -401,7 +401,7 @@ def process_PUT(url, data):
         mycollection = mydb[parsed_url[2]]
         reformatData = "'" + data[1:-1] + "'"
         insertedData = json.loads(reformatData)
-        mycollection.replace_one({}, insertedData)
+        mycollection.replace_one({}, insertedData, upsert=True)
     return 'You successfully updated data in the database'
 
 
@@ -424,6 +424,7 @@ def process_POST(url, data):
         insertedData = json.loads(reformatData)
         mycollection.insert_one(insertedData)
     return 'You successfully inserted to the database'
+
 
 def process_PATCH(url, data):
     # Parse the data we get from client
@@ -458,7 +459,8 @@ def process_PATCH(url, data):
         # Update the document with the provided data
         if document:
             update_data = {"'" + data[1:-1] + "'"}
-            result = collection.update_one({primary_key: {'$exists': True}}, {'$set': update_data})
+            result = collection.update_one(
+                {primary_key: {'$exists': True}}, {'$set': update_data})
     # If the data does not exist, insert the new data
     # Use the insert_one() method with the payload as the argument
         else:
@@ -469,6 +471,8 @@ def process_PATCH(url, data):
     return "Success! the PATCH command worked"
 
 # High-level function for command processing
+
+
 def command_process(command):
     try:
         # parse command by spaces
