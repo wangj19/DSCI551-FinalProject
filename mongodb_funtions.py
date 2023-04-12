@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import validators
 import json
+import uuid
 
 command_list = ["GET", "PUT", "POST", "PATCH", "DELETE"]
 filter_conds_list = ["orderBy", "limitToFirst",
@@ -29,13 +30,13 @@ def filter_process(content, condition_query):
     equalTo = condition_query["equalTo"]
     output = []
     if content is None:
-        return ""
-    elif not hasattr(content, '__iter__'):
-        return ""
+        return content
     elif isinstance(content, dict):
         for item in content.items():
             document = {item[0]: item[1]}
             output.append(document)
+    elif not hasattr(content, '__iter__'):
+        return content
     else:
         output = content
 
@@ -110,7 +111,6 @@ def filter_process(content, condition_query):
         can_sort = []
         non_sort = []
         paths = orderBy.split("/")
-        # print(paths)
         for x in output:
             if isinstance(x[list(x.keys())[0]], dict):
                 existFlag = True
@@ -118,18 +118,16 @@ def filter_process(content, condition_query):
                 for p in paths:
                     if not isinstance(temp, dict):
                         existFlag = False
-                        # print("break")
                         break
                     if p in list(temp.keys()):
                         temp = temp[p]
                         print(temp)
                     else:
                         existFlag = False
-                        # print("break")
                         break
                 if isinstance(temp, dict):
                     existFlag = False
-                # print(existFlag)
+
                 if existFlag:
                     can_sort.append(x)
                 else:
@@ -324,13 +322,18 @@ def process_GET(url, conditions):
         item = documents
         for key in json_keys:
             if type(item) == dict:
-                temp = item[key]
-                item = temp
+                if key in list(item.keys()):
+                    temp = item[key]
+                    item = temp
+                else:
+                    item = None
+                    break
             else:
                 item = None
                 break
         if item is not None:
             content = item
+        
         # return content
         return filter_process(content, condition_query)
 
@@ -405,25 +408,100 @@ def process_PUT(url, data):
     return 'You successfully updated data in the database'
 
 
+# This is a recursive helper function used for POST PUT and PATCH,
+# Input: data - original data in json format which need to update
+#        keys - paths to the points need to be replaced
+#        js   - json format data which is used to replace
+#        flag - flag to check wheck this is a valid path existing in original data,
+#               if the path is no more exists in original data, the function would create
+#               it to put the js(to_update part)
+# Output: json format data which is updated from data by js on the corresponding paths(keys)
+def recursive_helper(data, keys, js, flag):
+    if len(keys) == 0:
+        return js
+    elif flag:
+        if keys[0] in list(data.keys()):
+            if type(data[keys[0]]) is not dict:
+                data.update({keys[0]:recursive_helper(data, keys[1:], js, False)})
+            else:
+                data[keys[0]].update(recursive_helper(data[keys[0]], keys[1:], js, flag))
+            return data
+        else:
+            temp = {keys[0]:recursive_helper(data, keys[1:], js, False)}
+            return temp
+    else:
+        temp = {keys[0]:recursive_helper(data, keys[1:], js, flag)}
+        return temp
+        
+
+
+# FINISH
+# Since it's hard to change name of collection/database or create new collection/database,
+# we currently limit the length of command is greater than or equal to 3 items,
+# Assume that all database and collection entered is existing and available 
 def process_POST(url, data):
     parsed_url = url.split("/")
     address = "localhost"
     port = 27017
-
+    js = dict()
+    if data[0] != "\'" or data[-1]!="\'":
+        return "Invalid Command: Please enter data in single quotation marks"
+    else:
+        js = json.loads(data[1:-1])
+        myuuid = str(uuid.uuid4().hex)
+        js = dict({myuuid: js})
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
         port = parsed_url[0].split(":")[1]
     else:
         return "Invalid Command: invalid address and port"
     client = MongoClient(address, int(port))
+    if len(parsed_url) < 3:
+        return "Invalid Command: invalid POST on database or Collection"
+    
+    # curl -X POST "http://localhost:27017/test/test.json" -d '{"name":"John"}'
+    elif len(parsed_url) == 3:
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        collection.insert_one(js)
+    # curl -X POST "http://localhost:27017/test/test/1234577777.json" -d '{"name":"John"}'
+    # curl -X POST "http://localhost:27017/test/test/1234577777/name.json" -d '{"name":"John"}'
+    # curl -X POST "http://localhost:27017/test/test/1234577777/name/a/b.json" -d '{"name":"John"}'
+    else:
+        document_id = parsed_url[3]
+        json_keys = parsed_url[3:]
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        documents = dict()
+        for document in collection.find({}, {"_id": 0}):
+            documents.update(document)
 
-    if parsed_url[1] is not None and parsed_url[2] is not None and parsed_url[1] != "" and parsed_url[2] != "":
-        mydb = client[parsed_url[1]]
-        mycollection = mydb[parsed_url[2]]
-        reformatData = "'" + data[1:-1] + "'"
-        insertedData = json.loads(reformatData)
-        mycollection.insert_one(insertedData)
-    return 'You successfully inserted to the database'
+        # document id (the fourth object in the command) exists in the existing data, 
+        # post item on the existing documents
+        if document_id in list(documents.keys()):
+            # get existing document 
+            dataToUpdate = dict({document_id: documents[document_id]})
+            if len(json_keys)>1:
+                dataToUpdate = recursive_helper(dataToUpdate, json_keys, js, True)
+            else:
+                dataToUpdate.update(js)
+            newValue = {"$set": dataToUpdate}
+            filter = {document_id: {"$exists": True}}
+            # print(newValue)
+            collection.update_one(filter, newValue)
+        # document id doesnt exist in the existing data,
+        # post item by creating new document and all the fields in front of it
+        else:
+            item = js
+            for key in reversed(json_keys):
+                temp = dict()
+                temp.update({key:item})
+                item = temp
+            # print(item)
+            collection.insert_one(item)
+        return "POST " + str(dict({myuuid:js[myuuid]})) + " to http://" + url + ".json"
+        
+
 
 
 def process_PATCH(url, data):
