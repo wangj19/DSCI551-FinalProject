@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <title>Book Store</title>
+        <link rel="stylesheet" type="text/css" href='/statics/index.css' />
+        <title>HOME</title>
     </head>
     <body>
-        <h1>Book Store</h1>
-        <h3>{{collection}}</h3>
+        <div class="container">
+            <h1>Book List</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th>ISBN</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Price</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for book in books %}
+                <tr>
+                  <td>{{ book['ISBN'] }}</td>
+                  <td><a href="/book/{{ book['ISBN'] }}">{{ book['title'] }}</a></td>
+                  <td>{{ book['author'] }}</td>
+                  <td>{{ book['price'] }}</td>
+                  <td>{{ book['description'] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
     </body>
 </html>
