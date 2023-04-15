@@ -506,10 +506,19 @@ def process_POST(url, data):
 
 def process_PATCH(url, data):
     # Parse the data we get from client
+    # curl -X PATCH "http://localhost:27017/DSCI551/books/1234567890.json"
     # (curl -X PATCH -d '{"name": "John Smith", "age": 25}' 'https://inf551-1b578.firebaseio.com/users/100.json')
     parsed_url = url.split("/")
     address = "localhost"
     port = 27017
+
+    # curl -X PATCH "http://localhost:27017/DSCI551/books/1491957660.json" -d '{"name":"Mybook123","author":"[JamesSusanto]","Price":55,"description":"testing book patch"}'
+    if data[0] != "\'" or data[-1] != "\'":
+        return "Invalid Command: Please enter data in single quotation marks"
+    else:
+        formatted_data = json.loads(data[1:-1])
+        newID = str(uuid.uuid4().hex)
+        formatted_data = dict({newID: formatted_data})
 
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
@@ -521,32 +530,68 @@ def process_PATCH(url, data):
     # (similar to what you did in the process_GET function)
     client = MongoClient(address, int(port))
 
+    if len(parsed_url) < 3:
+        return "Invalid Command: invalid PATCH on database or Collection"
+    elif len(parsed_url) == 3:
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        collection.insert_one(formatted_data)
+    else:
+        document_id = parsed_url[3]
+        json_keys = parsed_url[3:]
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        documents = dict()
+        # Find a document with the primary_key field present
+        for document in collection.find({}, {"_id": 0}):
+            documents.update(document)
+
+
     # Check if the data you want to update exists in the database
     # You can use the find_one() method to search for a document
     # matching the conditions provided in the URL
     # If the data exists, update the data
     # Use the update_one() method with the conditions and payload as arguments
-    if parsed_url[1] is not None and parsed_url[2] is not None and parsed_url[3] is not None \
-            and parsed_url[1] != "" and parsed_url[2] != "" and parsed_url[2] != "":
-        db = client[parsed_url[1]]
-        collection = db[parsed_url[2]]
-        primary_key = parsed_url[3]
-        # Find a document with the primary_key field present
-        document = collection.find_one({primary_key: {'$exists': True}})
-
-        # Update the document with the provided data
-        if document:
-            update_data = {"'" + data[1:-1] + "'"}
-            result = collection.update_one(
-                {primary_key: {'$exists': True}}, {'$set': update_data})
-    # If the data does not exist, insert the new data
-    # Use the insert_one() method with the payload as the argument
+    # document id (the fourth object in the command) exists in the existing data,
+    # post item on the existing documents
+    if document_id in list(documents.keys()):
+        # get existing document
+        dataToUpdate = dict({document_id: documents[document_id]})
+        if len(json_keys) > 1:
+            dataToUpdate = recursive_helper(dataToUpdate, json_keys, formatted_data, True)
         else:
-            insert_one_data = "'" + data[1:-1] + "'"
-            inserted_data = json.loads(insert_one_data)
-            collection.insert_one(inserted_data)
-    # Return a message indicating whether the data was inserted or updated
-    return "Success! the PATCH command worked"
+            dataToUpdate.update(formatted_data)
+        newValue = {"$set": dataToUpdate}
+        filter = {document_id: {"$exists": True}}
+        # print(newValue)
+        # Update the document with the provided data
+        collection.update_one(filter, newValue)
+    # if parsed_url[1] is not None and parsed_url[2] is not None and parsed_url[3] is not None  \
+    #         and parsed_url[1] != "" and parsed_url[2] != "" and parsed_url[3] != "":
+    #     db = client[parsed_url[1]]
+    #     collection = db[parsed_url[2]]
+    #     primary_key = parsed_url[3]
+    #     # Find a document with the primary_key field present
+    #     document = collection.find_one({primary_key: {'$exists': True}})
+    #
+    #     # Update the document with the provided data
+    #     if document:
+    #         update_data = {"'" + data[1:-1] + "'"}
+    #         result = collection.update_one(
+    #             {primary_key: {'$exists': True}}, {'$set': update_data})
+    # # If the data does not exist, insert the new data
+    # # Use the insert_one() method with the payload as the argument
+    else:
+        item = formatted_data
+        for key in reversed(json_keys):
+            temp = dict()
+            temp.update({key: item})
+            item = temp
+        # print(item)
+        # If the data does not exist, insert the new data
+        collection.insert_one(item)
+    return "PATCH " + str(dict({newID: formatted_data[newID]})) + " to http://" + url + ".json"
+
 
 # High-level function for command processing
 
@@ -615,9 +660,9 @@ def command_process(command):
             # check key, because key must be STRING and no need to check value because it can be anything
             # TODO: handle post command
             if parsed_command[3] == '-d':
-                process_POST(db_url[7:-5], parsed_command[4])
+                process_PATCH(db_url[7:-5], parsed_command[4])
             elif parsed_command[4] == '-d':
-                return process_POST(db_url[7:-5], parsed_command[5])
+                return process_PATCH(db_url[7:-5], parsed_command[5])
             else:
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "DELETE":
