@@ -1,34 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="stylesheet" type="text/css" href='/statics/index.css' />
-        <title>HOME</title>
+        <title>Book Management System</title>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
+        <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+        <script type="text/javascript">
+          $(document).ready(function() {
+            $('#books-table').DataTable({
+              "pageLength": 50
+            });
+          });
+        </script>
+        
     </head>
     <body>
-        <div class="container">
-            <h1>Book List</h1>
-            <table>
-              <thead>
-                <tr>
-                  <th>ISBN</th>
-                  <th>Title</th>
-                  <th>Author</th>
-                  <th>Price</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for book in books %}
-                <tr>
-                  <td>{{ book['ISBN'] }}</td>
-                  <td><a href="/book/{{ book['ISBN'] }}">{{ book['title'] }}</a></td>
-                  <td>{{ book['author'] }}</td>
-                  <td>{{ book['price'] }}</td>
-                  <td>{{ book['description'] }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-        </div>
+        <!-- Header -->
+        <header>
+          <h1>Book Management System</h1>
+        </header>
+        
+        <main>
+          <!-- Add Book Buttion -->
+          <button id="add-book-btn">Add Book</button>
+          <!-- Add Book Dialog Modal-->
+          <div id="add-book-dialog" class="dialog" style="display: none;">
+            <div class="dialog-content">
+              <span class="dialog-close">&times;</span>
+              <form id="add-book-form">
+                <label for="isbn">ISBN:</label>
+                <input type="text" id="isbn-input" name="isbn"><br><br>
+                <label for="title">Title:</label>
+                <input type="text" id="title-input" name="title"><br><br>
+                <label for="author">Author:</label>
+                <input type="text" id="author-input" name="author"><br><br>
+                <label for="price">Price:</label>
+                <input type="text" id="price-input" name="price"><br><br>
+                <label for="description">Description:</label>
+                <textarea id="description-input" name="description"></textarea><br><br>
+                <button type="submit" class="dialog-button">Create</button>
+                <button id="cancel-button" type="button" class="dialog-button dialog-cancel-button">Cancel</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Table of book list -->
+          <div class="container">
+              <table id="books-table">
+                <thead>
+                  <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Price</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for book in books %}
+                  <tr>
+                    <td>{{ book['ISBN'] }}</td>
+                    <td><a href="/book/{{ book['ISBN'] }}">{{ book['title'] }}</a></td>
+                    <td>{{ book['author'] }}</td>
+                    <td>{{ book['price'] }}</td>
+                    <td>{{ book['description'] }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+          </div>
+        </main>
+
+        <script src="{{ url_for('static', filename='js/add_book.js') }}"></script>
+        <footer>
+          <p>&copy; Book Management System</p>
+        </footer>
     </body>
 </html>

@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, abort, make_response
 from flask_socketio import SocketIO, emit
 import mongodb_funtions as mf
 # define app
@@ -17,7 +17,6 @@ books_collection = db["books"]
 
 @app.route('/')
 def index():
-
     books = books_collection.find({}, {"_id": 0})
     books_data = []
     for book in books:
@@ -26,6 +25,37 @@ def index():
                           "price": data["price"], "description": data["description"]})
         books_data.append(book_data)
     return render_template('index.html', books=books_data)
+
+@app.route('/add_book', methods=['POST'])
+def add_book():
+    try:
+        new_book = request.json
+        # check if the ISBN number alreadys exists or not
+        books = dict()
+        for book in books_collection.find({}, {"_id": 0}):
+            books.update(book)
+        isbn = new_book["isbn"]
+        name = new_book["title"]
+        author = new_book["author"]
+        price = new_book["price"]
+        description = new_book["description"]
+        if isbn in list(books.keys()):
+            error_message = "This ISBN number already exists."
+            response = make_response(jsonify({"error": error_message}), 400)
+            return response
+        # Do something with the new_book data here
+        new_data = {isbn: {"name":name, "author": author, "price": price, 
+            "description": description}}
+        books_collection.insert_one(new_data)
+        success_message = "Success!"
+        response = make_response(jsonify({"message": success_message}), 200)
+        return response
+    
+    except Exception as e:
+        error_message = str(e)
+        response = make_response(jsonify({"error": error_message}), 400)
+        return response
+
 
 
 @app.route('/book/<isbn>')
