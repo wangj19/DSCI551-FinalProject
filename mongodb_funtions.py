@@ -399,13 +399,76 @@ def process_PUT(url, data):
         return "Invalid Command: invalid address and port"
     client = MongoClient(address, int(port))
 
-    if parsed_url[1] is not None and parsed_url[2] is not None and parsed_url[1] != "" and parsed_url[2] != "":
-        mydb = client[parsed_url[1]]
-        mycollection = mydb[parsed_url[2]]
-        reformatData = "'" + data[1:-1] + "'"
-        insertedData = json.loads(reformatData)
-        mycollection.replace_one({}, insertedData, upsert=True)
-    return 'You successfully updated data in the database'
+    js = dict()
+    if data[0] != "\'" or data[-1]!="\'":
+        return "Invalid Command: Please enter data in single quotation marks"
+    else:
+        js = json.loads(data[1:-1])
+        print(js)
+    if len(parsed_url[0].split(":")) == 2:
+        address = parsed_url[0].split(":")[0]
+        port = parsed_url[0].split(":")[1]
+    else:
+        return "Invalid Command: invalid address and port"
+    client = MongoClient(address, int(port))
+    # curl -X PUT "http://localhost:27017/test/test.json" -d '{"1234577777":{"name":"John"}}' -- PASS
+    # curl -X PUT "http://localhost:27017/test/test.json" -d '{"1234577777":{"name":"Hugo"}}' -- PASS
+    # curl -X PUT "http://localhost:27017/test/test/1234577777.json" -d '{"name":"John"}' -- PASS
+    # curl -X PUT "http://localhost:27017/test/test/1234577777/name.json" -d '{"name":"John"}' -- PASS
+    # curl -X PUT "http://localhost:27017/test/test/1234577777/name/a/b.json" -d '{"name":"John"}' -- PASS
+    if len(parsed_url) < 3:
+        return "Invalid Command: invalid POST on database or Collection"
+    elif len(parsed_url) == 3:
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        if len(list(js.keys()))!=1:
+            return "Invalid Command: inappropriate json data input. Please enter one item with primary key for PUT"
+        id = list(js.keys())[0]
+        documents = dict()
+        for document in collection.find({}, {"_id": 0}):
+            documents.update(document)
+        ## if document id exist already: do update_one
+        if id in list(documents.keys()):
+            collection.update_one({id: {"$exists": True}}, {"$set": js})
+        ## else: do insert_ones
+        else:
+            collection.insert_one(js)
+    else:
+        document_id = parsed_url[3]
+        json_keys = parsed_url[3:]
+        db = client[parsed_url[1]]
+        collection = db[parsed_url[2]]
+        documents = dict()
+        for document in collection.find({}, {"_id": 0}):
+            documents.update(document)
+
+        # document id (the fourth object in the command) exists in the existing data, 
+        # post item on the existing documents
+        if document_id in list(documents.keys()):
+            # get existing document 
+            dataToUpdate = dict({document_id: documents[document_id]})
+            if len(json_keys)>1:
+                dataToUpdate = recursive_helper(dataToUpdate, json_keys, js, True)
+            else:
+                dataToUpdate[document_id].update(js)
+            newValue = {"$set": dataToUpdate}
+            filter = {document_id: {"$exists": True}}
+            # print(newValue)
+            collection.update_one(filter, newValue)
+        # document id doesnt exist in the existing data,
+        # post item by creating new document and all the fields in front of it
+        else:
+            item = js
+            for key in reversed(json_keys):
+                temp = dict()
+                temp.update({key:item})
+                item = temp
+            # print(item)
+            collection.insert_one(item)
+
+    
+    return 'PUT ' + str(js) + " into http://" + url + ".json"
+
 
 
 # This is a recursive helper function used for POST PUT and PATCH,
@@ -484,7 +547,7 @@ def process_POST(url, data):
             if len(json_keys)>1:
                 dataToUpdate = recursive_helper(dataToUpdate, json_keys, js, True)
             else:
-                dataToUpdate.update(js)
+                dataToUpdate[document_id].update(js)
             newValue = {"$set": dataToUpdate}
             filter = {document_id: {"$exists": True}}
             # print(newValue)

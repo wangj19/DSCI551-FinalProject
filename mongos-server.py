@@ -59,4 +59,4 @@ def handle_command():
 
 # run app
 if __name__ == '__main__':
-    socket_.run(app, host='192.168.1.226', port=5000, debug=True)
+    socket_.run(app, debug=True)
