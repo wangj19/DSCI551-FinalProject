@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
       body: JSON.stringify(newBook)
     }).then(function(response) {
       if (response.status !== 200) {
-        // handle error response
-        response.json().then(function(data) {
+          // handle error response
+          response.json().then(function(data) {
           console.log("Error message: " + data.error);
           alert("Error message: " + data.error);
         });

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Book Detail</title>
+        <link rel="stylesheet" type="text/css" href="../statics/css/book_detail.css">
+        <script src="../statics/js/book_detail_update.js"></script>
+    </head>
+    <body>
+        <!-- Header -->
+        <header>
+            <h1>Book Management System</h1>
+        </header>
+        <div class="container">
+        <form id="book-detail-form">
+            <div class="form-group">
+            <label for="isbn-input">ISBN:</label>
+            <input type="text" class="form-control" id="isbn-input" value="{{book_details.ISBN}}" disabled>
+            </div>
+            <div class="form-group">
+            <label for="title-input">Title:</label>
+            <input type="text" style="width: 450px;" class="form-control" id="title-input" value="{{book_details.title}}" disabled>
+            </div>
+            <div class="form-group">
+            <label for="author-input">Author:</label>
+            <input type="text" style="width: 300px;" class="form-control" id="author-input" value="{{book_details.author}}" disabled>
+            </div>
+            <div class="form-group">
+            <label for="price-input">Price:</label>
+            <input type="text" class="form-control" id="price-input" value="{{book_details.price}}" disabled>
+            </div>
+            <div class="form-group">
+            <label for="description-input">Description:</label>
+            <textarea class="form-control" id="description-input" rows="5" style="width: 300px;" disabled>{{book_details.description}}</textarea>
+            </div>
+            <button type="button" class="btn btn-primary" id="update-btn">Edit</button>
+            <button type="button" class="btn btn-danger" id="cancel-btn" style="display:none;">Cancel</button>
+            <button type="submit" class="btn btn-success" id="confirm-btn" style="display:none;">Save</button>
+        </form>
+        </div>
+        <footer>
+            <p>&copy; Book Management System</p>
+        </footer>
+    </body>
+
+</html>

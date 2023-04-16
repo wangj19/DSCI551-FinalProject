@@ -56,7 +56,36 @@ def add_book():
         response = make_response(jsonify({"error": error_message}), 400)
         return response
 
-
+@app.route('/update_book', methods=['PUT'])
+def update_book():
+    try:
+        new_book = request.json
+        # check if the ISBN number alreadys exists or not
+        books = dict()
+        for book in books_collection.find({}, {"_id": 0}):
+            books.update(book)
+        isbn = new_book["isbn"]
+        name = new_book["title"]
+        author = new_book["author"]
+        price = new_book["price"]
+        description = new_book["description"]
+        if isbn not in list(books.keys()):
+            error_message = "Invalid ISBN number!"
+            response = make_response(jsonify({"error": error_message}), 400)
+            return response
+        # Do something with the new_book data here
+        new_data = {"$set": {isbn: {"name":name, "author": author, "price": price, 
+            "description": description}}}
+        filter = {isbn: {"$exists": True}}
+        books_collection.update_one(filter, new_data)
+        success_message = "Success!"
+        response = make_response(jsonify({"message": success_message}), 200)
+        return response
+    
+    except Exception as e:
+        error_message = str(e)
+        response = make_response(jsonify({"error": error_message}), 400)
+        return response
 
 @app.route('/book/<isbn>')
 def book_detail(isbn):
@@ -67,7 +96,7 @@ def book_detail(isbn):
         data = book[list(book.keys())[0]]
         book_data = dict({"ISBN": list(book.keys())[0], "title": data["name"], "author": data["author"],
                           "price": data["price"], "description": data["description"]})
-    return str(book_data)
+    return render_template("book_detail.html", book_details = book_data)
 
 
 @app.route("/login")
