@@ -4,38 +4,53 @@
         <title>Book Detail</title>
         <link rel="stylesheet" type="text/css" href="../statics/css/book_detail.css">
         <script src="../statics/js/book_detail_update.js"></script>
+        <script src="../statics/js/book_detail_delete.js"></script>
     </head>
     <body>
         <!-- Header -->
         <header>
             <h1>Book Management System</h1>
         </header>
+                
+
         <div class="container">
-        <form id="book-detail-form">
+          <form id="book-detail-form">
             <div class="form-group">
-            <label for="isbn-input">ISBN:</label>
-            <input type="text" class="form-control" id="isbn-input" value="{{book_details.ISBN}}" disabled>
+                <label for="isbn-input">ISBN:</label>
+                <input type="text" class="form-control" id="isbn-input" value="{{book_details.ISBN}}" disabled>
             </div>
             <div class="form-group">
-            <label for="title-input">Title:</label>
-            <input type="text" style="width: 450px;" class="form-control" id="title-input" value="{{book_details.title}}" disabled>
+                <label for="title-input">Title:</label>
+                <input type="text" style="width: 450px;" class="form-control" id="title-input" value="{{book_details.title}}" disabled>
             </div>
             <div class="form-group">
-            <label for="author-input">Author:</label>
-            <input type="text" style="width: 300px;" class="form-control" id="author-input" value="{{book_details.author}}" disabled>
+                <label for="author-input">Author:</label>
+                <input type="text" style="width: 300px;" class="form-control" id="author-input" value="{{book_details.author}}" disabled>
             </div>
             <div class="form-group">
-            <label for="price-input">Price:</label>
-            <input type="text" class="form-control" id="price-input" value="{{book_details.price}}" disabled>
+                <label for="price-input">Price:</label>
+                <input type="text" class="form-control" id="price-input" value="{{book_details.price}}" disabled>
             </div>
             <div class="form-group">
-            <label for="description-input">Description:</label>
-            <textarea class="form-control" id="description-input" rows="5" style="width: 300px;" disabled>{{book_details.description}}</textarea>
+                <label for="description-input">Description:</label>
+                <textarea class="form-control" id="description-input" rows="5" style="width: 300px;" disabled>{{book_details.description}}</textarea>
             </div>
-            <button type="button" class="btn btn-primary" id="update-btn">Edit</button>
-            <button type="button" class="btn btn-danger" id="cancel-btn" style="display:none;">Cancel</button>
-            <button type="submit" class="btn btn-success" id="confirm-btn" style="display:none;">Save</button>
-        </form>
+            <div class="bottons">
+                <button type="button" class="btn btn-primary" id="update-btn">Edit</button>              
+                <button type="button" id="delete-btn" class="btn btn-danger">Delete</button>
+                <button type="button" class="btn btn-danger" id="cancel-update-btn" style="display:none;">Cancel</button>
+                <button type="submit" class="btn btn-success" id="confirm-update-btn" style="display:none;">Save</button>
+            </div>
+            <div id="confirmation-window" style="display: none;">
+                <div class="confirmation-dialog">
+                    <p>Are you sure you want to delete this book with ISBN {{book_details.ISBN}} ?</p>
+                    <div class="button-container">
+                        <button id="confirm-delete">Delete</button>
+                        <button id="cancel-delete">Cancel</button>
+                    </div>
+                </div>
+            </div>
+          </form>
         </div>
         <footer>
             <p>&copy; Book Management System</p>

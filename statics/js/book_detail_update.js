@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     // DOM elements
     const updateBtn = document.querySelector('#update-btn');
-    const confirmBtn = document.querySelector('#confirm-btn');
-    const cancelBtn = document.querySelector('#cancel-btn');
+    const confirmBtn = document.querySelector('#confirm-update-btn');
+    const cancelBtn = document.querySelector('#cancel-update-btn');
+    const deleteButton = document.querySelector('#delete-btn');
     const author = document.querySelector("#author-input");
     const price = document.querySelector("#price-input");
     const description = document.querySelector("#description-input");
+    const confirmationWindow = document.getElementById('confirmation-window');
     const isbn = document.querySelector("#isbn-input");
     const title = document.querySelector("#title-input");
     const author_old = author.value;
@@ -21,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmBtn.style.display = 'block';
         cancelBtn.style.display = 'block';
         updateBtn.style.display = 'none';
+        deleteButton.style.display = 'none';
+        confirmationWindow.style.display = "none";
     });
 
     // Cancel update
@@ -36,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmBtn.style.display = 'none';
         cancelBtn.style.display = 'none';
         updateBtn.style.display = 'block';
+        deleteButton.style.display = 'block';
     });
 
     // Update book
@@ -91,6 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             confirmBtn.style.display = 'none';
                             cancelBtn.style.display = 'none';
                             updateBtn.style.display = 'block';
+                            deleteButton.style.display = 'block';
+                            confirmationWindow.style.display = "none";
                             alert("Successfully Update Book with ISBN - " + isbn_new);
                             location.reload();
      
@@ -103,9 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }else {
             alert("There is nothing changed!")
         }
-
     });
-
-
   });
   
