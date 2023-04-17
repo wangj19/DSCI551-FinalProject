@@ -91,6 +91,28 @@ def update_book():
         response = make_response(jsonify({"error": error_message}), 400)
         return response
 
+@app.route('/delete_book/<isbn>', methods=['DELETE'])
+def delete_book(isbn):
+    try:
+        print(isbn)
+        books = dict()
+        for book in books_collection.find({}, {"_id": 0}):
+            books.update(book)
+        if isbn not in list(books.keys()):
+            error_message = "Invalid ISBN number!"
+            response = make_response(jsonify({"error": error_message}), 400)
+            return response
+        filter = {isbn: {"$exists": True}}
+        books_collection.delete_one(filter)
+        success_message = "Success!"
+        response = make_response(jsonify({"message": success_message}), 200)
+        return response
+    except Exception as e:
+        error_message = str(e)
+        response = make_response(jsonify({"error": error_message}), 400)
+        return response
+    
+
 @app.route('/book/<isbn>')
 def book_detail(isbn):
     document = books_collection.find(
