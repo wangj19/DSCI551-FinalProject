@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import validators
 import json
 import uuid
+import random
 
 command_list = ["GET", "PUT", "POST", "PATCH", "DELETE"]
 filter_conds_list = ["orderBy", "limitToFirst",
@@ -565,8 +566,16 @@ def process_POST(url, data):
         return "POST " + str(dict({myuuid:js[myuuid]})) + " to http://" + url + ".json"
         
 
-
-
+# this function will help us create a new ISBN / Primary Key number for a new book.
+def generate_random_number(existing_keys):
+    while True:
+        existing_keys_set = set(existing_keys)  # Convert dict_keys to a set for faster lookup
+        # Generate a new 10-digit random number
+        new_key = random.randint(10**9, 10**10-1)
+        # Check if the new random number is not in the existing keys
+        if new_key not in existing_keys_set:
+            # If the new random number is unique, return it
+            return int(new_key)
 def process_PATCH(url, data):
     # Parse the data we get from client
     # curl -X PATCH "http://localhost:27017/DSCI551/books/1234567890.json"
@@ -580,8 +589,9 @@ def process_PATCH(url, data):
         return "Invalid Command: Please enter data in single quotation marks"
     else:
         formatted_data = json.loads(data[1:-1])
-        newID = str(uuid.uuid4().hex)
-        formatted_data = dict({newID: formatted_data})
+        print(formatted_data)
+        # newID = str(uuid.uuid4().hex)
+        # formatted_data = dict({newID: formatted_data})
 
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
@@ -594,11 +604,28 @@ def process_PATCH(url, data):
     client = MongoClient(address, int(port))
 
     if len(parsed_url) < 3:
-        return "Invalid Command: invalid PATCH on database or Collection"
+        return "Invalid Command: invalid POST on database or Collection"
     elif len(parsed_url) == 3:
         db = client[parsed_url[1]]
         collection = db[parsed_url[2]]
-        collection.insert_one(formatted_data)
+        documents = dict()
+        for document in collection.find({}, {"_id": 0}):
+            documents.update(document)
+
+        # check if the user inserted an existing ISBN or not.
+        # If it exists, use the existing ID and make new ID if it does not exist
+        print(type(list(documents.keys())[0]))
+        if len(list(formatted_data.keys())) != 1:
+            id = generate_random_number(documents.keys())
+        else:
+            id = list(formatted_data.keys())[0]
+
+        ## if document id exist already: do update_one
+        if id in list(documents.keys()):
+            collection.update_one({id: {"$exists": True}}, {"$set": formatted_data})
+        ## else: do insert_ones
+        else:
+            collection.insert_one(formatted_data)
     else:
         document_id = parsed_url[3]
         json_keys = parsed_url[3:]
@@ -609,51 +636,38 @@ def process_PATCH(url, data):
         for document in collection.find({}, {"_id": 0}):
             documents.update(document)
 
-
-    # Check if the data you want to update exists in the database
-    # You can use the find_one() method to search for a document
-    # matching the conditions provided in the URL
-    # If the data exists, update the data
-    # Use the update_one() method with the conditions and payload as arguments
-    # document id (the fourth object in the command) exists in the existing data,
-    # post item on the existing documents
-    if document_id in list(documents.keys()):
-        # get existing document
-        dataToUpdate = dict({document_id: documents[document_id]})
-        if len(json_keys) > 1:
-            dataToUpdate = recursive_helper(dataToUpdate, json_keys, formatted_data, True)
+        # Check if the data you want to update exists in the database
+        # You can use the find_one() method to search for a document
+        # matching the conditions provided in the URL
+        # If the data exists, update the data
+        # Use the update_one() method with the conditions and payload as arguments
+        # document id (the fourth object in the command) exists in the existing data,
+        # post item on the existing documents
+        if document_id in list(documents.keys()):
+            # get existing document
+            dataToUpdate = dict({document_id: documents[document_id]})
+            if len(json_keys) > 1:
+                dataToUpdate = recursive_helper(dataToUpdate, json_keys, formatted_data, True)
+            else:
+                dataToUpdate[document_id].update(formatted_data)
+            newValue = {"$set": dataToUpdate}
+            filter = {document_id: {"$exists": True}}
+            # print(newValue)
+            # Update the document with the provided data
+            collection.update_one(filter, newValue)
+        # document id doesn't exist in the existing data,
+        # post item by creating new document and all the fields in front of it
         else:
-            dataToUpdate.update(formatted_data)
-        newValue = {"$set": dataToUpdate}
-        filter = {document_id: {"$exists": True}}
-        # print(newValue)
-        # Update the document with the provided data
-        collection.update_one(filter, newValue)
-    # if parsed_url[1] is not None and parsed_url[2] is not None and parsed_url[3] is not None  \
-    #         and parsed_url[1] != "" and parsed_url[2] != "" and parsed_url[3] != "":
-    #     db = client[parsed_url[1]]
-    #     collection = db[parsed_url[2]]
-    #     primary_key = parsed_url[3]
-    #     # Find a document with the primary_key field present
-    #     document = collection.find_one({primary_key: {'$exists': True}})
-    #
-    #     # Update the document with the provided data
-    #     if document:
-    #         update_data = {"'" + data[1:-1] + "'"}
-    #         result = collection.update_one(
-    #             {primary_key: {'$exists': True}}, {'$set': update_data})
-    # # If the data does not exist, insert the new data
-    # # Use the insert_one() method with the payload as the argument
-    else:
-        item = formatted_data
-        for key in reversed(json_keys):
-            temp = dict()
-            temp.update({key: item})
-            item = temp
-        # print(item)
-        # If the data does not exist, insert the new data
-        collection.insert_one(item)
-    return "PATCH " + str(dict({newID: formatted_data[newID]})) + " to http://" + url + ".json"
+            item = formatted_data
+            for key in reversed(json_keys):
+                temp = dict()
+                temp.update({key: item})
+                item = temp
+            # print(item)
+            # If the data does not exist, insert the new data
+            collection.insert_one(item)
+
+    return "PATCH " + str(formatted_data) + " to http://" + url + ".json"
 
 
 # High-level function for command processing
