@@ -589,9 +589,8 @@ def process_PATCH(url, data):
         return "Invalid Command: Please enter data in single quotation marks"
     else:
         formatted_data = json.loads(data[1:-1])
+        print(data)
         print(formatted_data)
-        # newID = str(uuid.uuid4().hex)
-        # formatted_data = dict({newID: formatted_data})
 
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
@@ -614,16 +613,19 @@ def process_PATCH(url, data):
 
         # check if the user inserted an existing ISBN or not.
         # If it exists, use the existing ID and make new ID if it does not exist
-        print(type(list(documents.keys())[0]))
         if len(list(formatted_data.keys())) != 1:
-            id = generate_random_number(documents.keys())
+            # make new ISBN using random number generator and
+            # make it str to assign it as Primary Key / ISBN of new data
+            id = str(generate_random_number(documents.keys()))
+            formatted_data = {id: formatted_data}
         else:
-            id = list(formatted_data.keys())[0]
-
-        ## if document id exist already: do update_one
+            # make it str to assign it as Primary Key / ISBN of new data
+            id = str(list(documents.keys())[0])
+            formatted_data = {id: formatted_data}
+        # if document id exist already: do update_one
         if id in list(documents.keys()):
             collection.update_one({id: {"$exists": True}}, {"$set": formatted_data})
-        ## else: do insert_ones
+        # else: do insert_ones
         else:
             collection.insert_one(formatted_data)
     else:
@@ -670,9 +672,38 @@ def process_PATCH(url, data):
     return "PATCH " + str(formatted_data) + " to http://" + url + ".json"
 
 
+# (James) I made this function to be able to extract user data with space characters
+def extract_user_data(command):
+    """
+    Extract user data from the given command string in JSON format.
+
+    This function searches for a "-d" flag in the command string and extracts
+    the user data that follows it. The user data is assumed to be in JSON format.
+
+    Args:
+        command (str): The command string containing the user data.
+
+    Returns:
+        str: The extracted user data in JSON format, or None if the "-d" flag is not found.
+    """
+
+    # Initialize the user_data variable to None
+    user_data = None
+
+    # Iterate through the command string
+    for i in range(len(command)):
+        # Check if the current character is '-' and the next character is 'd'
+        if command[i] == "-" and command[i + 1] == "d":
+            # Extract the user_data following the "-d" flag
+            user_data = command[i + 3:]
+            # Break the loop once the user data is found
+            break
+
+    # Return the extracted user data in JSON format, or None if not found
+    return user_data
+
+
 # High-level function for command processing
-
-
 def command_process(command):
     try:
         # parse command by spaces
@@ -735,11 +766,16 @@ def command_process(command):
             # check if there is -d for data insertion,
             # always check if after -d there is "'{"
             # check key, because key must be STRING and no need to check value because it can be anything
-            # TODO: handle post command
+
+            # use extract_user_data() function to take in user data
+            data = extract_user_data(command)
+
             if parsed_command[3] == '-d':
-                process_PATCH(db_url[7:-5], parsed_command[4])
+                # insert the url and extracted data
+                return process_PATCH(db_url[7:-5], data)
             elif parsed_command[4] == '-d':
-                return process_PATCH(db_url[7:-5], parsed_command[5])
+                # insert the url and extracted data
+                return process_PATCH(db_url[7:-5], data)
             else:
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "DELETE":

@@ -20,12 +20,8 @@ def index():
     books = books_collection.find({}, {"_id": 0})
     books_data = []
     for book in books:
-        # data = book[list(book.keys())[0]]
-        # print(list(book.keys())[0])
-        # print(data)
-        # print(type(data))
         data = book[list(book.keys())[0]]
-        book_data = dict({"ISBN": list(book.keys())[0], "title": data["name"], "author": data["author"],
+        book_data = dict({"ISBN": int(list(book.keys())[0]), "title": data["name"], "author": data["author"],
                           "price": data["price"], "description": data["description"]})
         books_data.append(book_data)
     return render_template('index.html', books=books_data)
