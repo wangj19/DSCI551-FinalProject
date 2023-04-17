@@ -108,6 +108,7 @@ def filter_process(content, condition_query):
     # handle filter orderby a specific key or path of keys
     # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&endAt=30&limitToLast=3"
     else:
+
         can_sort = []
         non_sort = []
         paths = orderBy.split("/")
@@ -256,7 +257,42 @@ def process_GET(url, conditions):
         port = parsed_url[0].split(":")[1]
     else:
         return "Invalid Command: invalid address and port"
+    
+    # Check if order index has indexOn
     client = MongoClient(address, int(port))
+    ifIndexed = True
+    if orderByIndex is not None and orderByIndex.lower() != "$key" and orderByIndex.lower() != "$value": 
+        ifIndexed = False
+        if "config" not in client.list_database_names():
+            return "Invalid Command: Unable to find Rules document"
+        if "rules" not in client["config"].list_collection_names():
+            return "Invalid Command: Unable to find Rules document"
+        rules_col = client["config"]["rules"]
+        rules = {}
+        for d in rules_col.find({}, {"_id": 0}):
+            rules.update(d)
+        order_Path = parsed_url[1:]
+        indexOn = None
+        temp = rules["rules"]
+        for o in order_Path:
+            if o in list(temp.keys()):
+                temp = temp[o]
+            else:
+                temp = None
+                break
+        if temp is not None:
+            if ".indexOn" in list(temp.keys()):
+                indexOn = temp[".indexOn"]
+        if indexOn is not None:
+            if orderByIndex == indexOn:
+                ifIndexed = True
+    
+    if not ifIndexed:
+        return "Invalid Command: " + orderByIndex + " is not Indexed On"
+            
+
+        
+
     if len(parsed_url) == 1:
         # only enter localhost or IP address end with .json -- invalid url form
         # untested code -- currently unreachable
