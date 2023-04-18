@@ -441,7 +441,7 @@ def process_PUT(url, data):
         return "Invalid Command: Please enter data in single quotation marks"
     else:
         js = json.loads(data[1:-1])
-        print(js)
+
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
         port = parsed_url[0].split(":")[1]
@@ -458,13 +458,21 @@ def process_PUT(url, data):
     elif len(parsed_url) == 3:
         db = client[parsed_url[1]]
         collection = db[parsed_url[2]]
-        if len(list(js.keys()))!=1:
-            return "Invalid Command: inappropriate json data input. Please enter one item with primary key for PUT"
-        id = list(js.keys())[0]
         documents = dict()
         for document in collection.find({}, {"_id": 0}):
             documents.update(document)
-        ## if document id exist already: do update_one
+        # check if the user inserted an existing ISBN or not.
+        # If it exists, use the existing ID and make new ID if it does not exist
+        if len(list(js.keys())) != 1:
+            # make new ISBN using random number generator and
+            # make it str to assign it as Primary Key / ISBN of new data
+            id = str(generate_random_number(documents.keys()))
+            js = {id: js}
+        else:
+            # make it str to assign it as Primary Key / ISBN of new data
+            id = str(list(documents.keys())[0])
+            js = {id: js}
+        # if document id exist already: do update_one
         if id in list(documents.keys()):
             collection.update_one({id: {"$exists": True}}, {"$set": js})
         ## else: do insert_ones
@@ -544,21 +552,33 @@ def process_POST(url, data):
     address = "localhost"
     port = 27017
     js = dict()
-    if data[0] != "\'" or data[-1]!="\'":
-        return "Invalid Command: Please enter data in single quotation marks"
-    else:
-        js = json.loads(data[1:-1])
-        myuuid = str(uuid.uuid4().hex)
-        js = dict({myuuid: js})
+
+    # check if url address and port is valid
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
         port = parsed_url[0].split(":")[1]
     else:
         return "Invalid Command: invalid address and port"
     client = MongoClient(address, int(port))
+
+    # complete documents, so we can use generate_random_number(documents.keys()) in line 569
+    # to assign a new 10-digit ISBN book number / primary key that has not been used previously
+    db = client[parsed_url[1]]
+    collection = db[parsed_url[2]]
+    documents = dict()
+    for document in collection.find({}, {"_id": 0}):
+        documents.update(document)
+
+    # check if data is valid
+    if data[0] != "\'" or data[-1]!="\'":
+        return "Invalid Command: Please enter data in single quotation marks"
+    else:
+        js = json.loads(data[1:-1])
+        my_new_id = str(generate_random_number(documents.keys()))
+        js = dict({my_new_id: js})
+
     if len(parsed_url) < 3:
         return "Invalid Command: invalid POST on database or Collection"
-    
     # curl -X POST "http://localhost:27017/test/test.json" -d '{"name":"John"}'
     elif len(parsed_url) == 3:
         db = client[parsed_url[1]]
@@ -599,7 +619,8 @@ def process_POST(url, data):
                 item = temp
             # print(item)
             collection.insert_one(item)
-        return "POST " + str(dict({myuuid:js[myuuid]})) + " to http://" + url + ".json"
+
+    return "POST " + str(dict({my_new_id:js[my_new_id]})) + " to http://" + url + ".json"
         
 
 # this function will help us create a new ISBN / Primary Key number for a new book.
@@ -625,8 +646,6 @@ def process_PATCH(url, data):
         return "Invalid Command: Please enter data in single quotation marks"
     else:
         formatted_data = json.loads(data[1:-1])
-        print(data)
-        print(formatted_data)
 
     if len(parsed_url[0].split(":")) == 2:
         address = parsed_url[0].split(":")[0]
@@ -828,7 +847,7 @@ def command_process(command):
 
         # process POST
         elif parsed_command[2].upper() == "POST":
-            # use extract_user_data() function to take in user dat
+            # use extract_user_data() function to take in user data
             if parsed_command[3] == '-d':
                 process_POST(db_url[7:-5], extract_user_data(command))
             elif parsed_command[4] == '-d':
