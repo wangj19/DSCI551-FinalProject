@@ -672,6 +672,26 @@ def process_PATCH(url, data):
     return "PATCH " + str(formatted_data) + " to http://" + url + ".json"
 
 
+# (James) I made this function to be able to extract URL regardless of where the URL is
+def extract_url(user_input):
+    # Split the user input string into parts using spaces as delimiters
+    input_parts = user_input.split(" ")
+
+    # Initialize a variable to hold the URL, initially set to None
+    url = None
+
+    # Iterate through each part of the input_parts list
+    for part in input_parts:
+        # Check if the current part starts with "http://" or "https://"
+        if part.startswith("\"http://") or part.startswith("\"https://"):
+            # If it does, set the url variable to the current part
+            url = part
+            # Break the loop, since we've found the URL
+            break
+
+    # Return the extracted URL, which will be either the URL string or None if not found
+    return url
+
 # (James) I made this function to be able to extract user data with space characters
 def extract_user_data(command):
     """
@@ -687,6 +707,10 @@ def extract_user_data(command):
         str: The extracted user data in JSON format, or None if the "-d" flag is not found.
     """
 
+    # curl -X PATCH -d '{"name": "John Smith", "age": 25}' 'https://inf551-1b578.firebaseio.com/users/100.json'
+    # curl -X PATCH "http://localhost:27017/DSCI551/books/1491957660.json" -d '{"name":"Mybook123","author":"[JamesSusanto]","Price":55,"description":"testing book patch"}'
+    # user can enter either data (-d '{}') or URL ("http://..") first and this function will still extract only the data
+
     # Initialize the user_data variable to None
     user_data = None
 
@@ -695,7 +719,8 @@ def extract_user_data(command):
         # Check if the current character is '-' and the next character is 'd'
         if command[i] == "-" and command[i + 1] == "d":
             # Extract the user_data following the "-d" flag
-            user_data = command[i + 3:]
+            data_end_index = [x for x in range(len(command)) if command[x] == "}"]
+            user_data = command[i + 3: data_end_index[0]+2]
             # Break the loop once the user data is found
             break
 
@@ -722,14 +747,33 @@ def command_process(command):
         if parsed_command[2].upper() not in command_list:
             return "Invalid Command: only accept GET, , PUT, POST, PATCH, DELETE command"
 
-        # check if the url is entered in parenthesis and is a valid url format
-        if not ((parsed_command[3][0] == "\'" and parsed_command[3][-1] == "\'") or (parsed_command[3][0] == "\"" and parsed_command[3][-1] == "\"")):
-            return "Invalid Command: please enter url with parenthesis"
-        if not validators.url(parsed_command[3][1:-2]):
-            return "Invalid Command: " + parsed_command[3] + " is invalid url"
+        # check if the url is entered in single or double quotes and is a valid url format
+        if not ((parsed_command[3][0] == "\'" and parsed_command[3][-1] == "\'")
+                or (parsed_command[3][0] == "\"" and parsed_command[3][-1] == "\"")
+                or (parsed_command[3][0] == "-" and parsed_command[3][-1] == "d")
+                or (parsed_command[5][0] == "\'" and parsed_command[5][-1] == "\'")
+                or (parsed_command[5][0] == "\"" and parsed_command[5][-1] == "\"")):
+            return "Invalid Command: please enter url with single/double quotes"
+        # if user decides to enter data (-d '{}') first before URL (https://..)
+        if parsed_command[3] == "-d":
+            # Extract user data and insert it to parsed_command[4]
+            current_user_data = extract_user_data(command)
+            parsed_command[4] = current_user_data
+            # Extract user URL and insert it to parsed_command[5]
+            parsed_command[5] = extract_url(command)
+            # url is parsed_command[5] if user inserts data "-d" first
+            url = parsed_command[5][1:-1]
+            # check if URL is valid
+            if validators.url(parsed_command[5][0:-1]):
+                return "Invalid Command: " + parsed_command[5] + " is invalid url"
+        else:
+            # url is parsed_command[3] if user inserts data "-d" last
+            url = parsed_command[3][1:-1]
+            # check if URL is valid
+            if validators.url(parsed_command[3][0:-1]):
+                return "Invalid Command: " + parsed_command[3] + " is invalid url"
 
         # further parse the command and identify the filter conditions in the url
-        url = parsed_command[3][1:-1]
         db_url = url.split("?")[0]
         filter_conditions = None
         if len(url.split("?")) == 2:
@@ -748,17 +792,19 @@ def command_process(command):
 
         # process POST
         elif parsed_command[2].upper() == "POST":
+            # use extract_user_data() function to take in user dat
             if parsed_command[3] == '-d':
-                process_POST(db_url[7:-5], parsed_command[4])
+                process_POST(db_url[7:-5], extract_user_data(command))
             elif parsed_command[4] == '-d':
-                return process_POST(db_url[7:-5], parsed_command[5])
+                return process_POST(db_url[7:-5], extract_user_data(command))
             else:
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "PUT":
+            # use extract_user_data() function to take in user dat
             if parsed_command[3] == '-d':
-                process_PUT(db_url[7:-5], parsed_command[4])
+                process_PUT(db_url[7:-5], extract_user_data(command))
             elif parsed_command[4] == '-d':
-                return process_PUT(db_url[7:-5], parsed_command[5])
+                return process_PUT(db_url[7:-5], extract_user_data(command))
             else:
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "PATCH":
@@ -768,14 +814,12 @@ def command_process(command):
             # check key, because key must be STRING and no need to check value because it can be anything
 
             # use extract_user_data() function to take in user data
-            data = extract_user_data(command)
-
             if parsed_command[3] == '-d':
                 # insert the url and extracted data
-                return process_PATCH(db_url[7:-5], data)
+                return process_PATCH(db_url[7:-5], extract_user_data(command))
             elif parsed_command[4] == '-d':
                 # insert the url and extracted data
-                return process_PATCH(db_url[7:-5], data)
+                return process_PATCH(db_url[7:-5], extract_user_data(command))
             else:
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "DELETE":
