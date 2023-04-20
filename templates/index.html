@@ -59,13 +59,15 @@
 
           <!-- Table of book list -->
           <div class="container">
-              <table id="books-table" style="text-align: left; font-family: 'Courier New', Courier, monospace;">
+              <table id="books-table" style="text-align: left; font-family: 'Courier New', Courier, monospace; width: 100%;  flex: 1;
+              overflow-y: auto; /* add a vertical scroll bar when content overflows */
+              display: block; width: 100%; padding: 0%; max-height: calc(100% - 50px);">
                 <thead>
                   <tr>
                     <th>ISBN</th>
                     <th>Title</th>
                     <th>Author</th>
-                    <th>Price</sth>
+                    <th>Price</th>
                     <th>Description</th>
                   </tr>
                 </thead>
@@ -81,12 +83,9 @@
                   {% endfor %}
                 </tbody>
               </table>
+              <script src="{{ url_for('static', filename='js/add_book.js') }}"></script>
           </div>
         </main>
-
-        <script src="{{ url_for('static', filename='js/add_book.js') }}"></script>
-        <footer>
-          <p>&copy; Book Management System</p>
-        </footer>
+        
     </body>
 </html>

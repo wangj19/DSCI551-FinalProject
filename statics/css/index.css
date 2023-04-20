@@ -45,6 +45,9 @@ footer {
 }
 
 
+
+
+
 #books-table {
   border-collapse: collapse;
   margin: 25px 0;
@@ -54,6 +57,8 @@ footer {
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
   border-bottom-color: #009879;
+  flex: 1;
+  overflow: auto;
 }
 
 /* Customize the table header */

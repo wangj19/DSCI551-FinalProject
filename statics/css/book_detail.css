@@ -13,6 +13,19 @@ header {
     padding: 10px;
     margin-bottom: 30px; 
   }
+  
+  .form-control {
+    background-color: #fff;
+    border: #333;
+    border-radius: 4px;
+    padding: 5px;
+  }
+
+  label {
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+  }
 
   .container {
     max-width: 600px;
@@ -34,6 +47,42 @@ header {
   
   #edit-button {
     margin-right: 10px;
+  }
+
+  #update-btn {
+    background-color: white;
+    color: #098789;
+    border-radius: 4px;
+  }
+
+  #delete-btn {
+    background-color: white;
+    color: red;
+    border-radius: 4px;
+  }
+
+  #cancel-delete {
+    background-color: white;
+    color: red;
+    border-radius: 4px;
+  }
+
+  #confirm-delete {
+    background-color: white;
+    color: #098789;
+    border-radius: 4px;
+  }
+
+  #confirm-update-btn {
+    background-color: white;
+    color: red;
+    border-radius: 4px;
+  }
+
+  #cancel-update-btn {
+    background-color: white;
+    color: #098789;
+    border-radius: 4px;
   }
   
   #cancel-button, #save-button {

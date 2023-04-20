@@ -8,12 +8,12 @@
     </head>
     <body>
         <!-- Header -->
-        <header>
+        <header style="background-color: #009879; font-family: 'Courier New', Courier, monospace;">
             <h1>Book Management System</h1>
         </header>
                 
 
-        <div class="container">
+        <div class="container" style="background-color: #009879; border-radius: 4px; align-items: center; justify-content: center; display: flex; padding: 12px;">
           <form id="book-detail-form">
             <div class="form-group">
                 <label for="isbn-input">ISBN:</label>
@@ -31,15 +31,15 @@
                 <label for="price-input">Price:</label>
                 <input type="text" class="form-control" id="price-input" value="{{book_details.price}}" disabled>
             </div>
-            <div class="form-group">
-                <label for="description-input">Description:</label>
+            <div class="form-group" style="flex-direction: row; display: flex;">
+                <label for="description-input" style="align-items: start; display: flex;">Description:</label>
                 <textarea class="form-control" id="description-input" rows="5" style="width: 300px;" disabled>{{book_details.description}}</textarea>
             </div>
             <div class="bottons">
-                <button type="button" class="btn btn-primary" id="update-btn">Edit</button>              
-                <button type="button" id="delete-btn" class="btn btn-danger">Delete</button>
-                <button type="button" class="btn btn-danger" id="cancel-update-btn" style="display:none;">Cancel</button>
-                <button type="submit" class="btn btn-success" id="confirm-update-btn" style="display:none;">Save</button>
+                <button type="button" class="btn btn-primary" id="update-btn" >Edit</button>              
+                <button type="button" id="delete-btn" class="btn btn-danger" >Delete</button>
+                    <button type="button" class="btn btn-danger" id="cancel-update-btn" style="display:none;">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="confirm-update-btn" style="display:none;">Save</button>
             </div>
             <div id="confirmation-window" style="display: none;">
                 <div class="confirmation-dialog">
@@ -52,7 +52,7 @@
             </div>
           </form>
         </div>
-        <footer>
+        <footer style="background-color: #009879; font-family: 'Courier New', Courier, monospace;">
             <p>&copy; Book Management System</p>
         </footer>
     </body>
