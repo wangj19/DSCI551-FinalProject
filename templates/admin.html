@@ -6,13 +6,14 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
         <link rel="stylesheet" href='/statics/css/admin.css' />
     </head>
-    <body>
-        <h1 style="background-color:white;">ADMIN</h1>
-        <form id="send_command" method="POST" action="{{url_for('handle_command')}}">
-            <input type="text"  name="command" id="command" placeholder="Please enter command">
-            <button type="submit">Send Command</button>
-        </form>
-
-
+    <body style="background-color: #009879; display: flex;
+    align-items: center; justify-content: center; height: 100vh;">
+        <div style="background-color: white; width: 600px; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.3);        ">
+            <h1 style="background-color:white; font-family: 'Courier New', Courier, monospace; padding-left: 12px;">ADMIN</h1>
+            <form id="send_command" style="border-width: 0; padding-inline: 12px; display: flex; flex-direction: column;" method="POST" action="{{url_for('handle_command')}}">
+                <input type="text" style="font-family: 'Courier New', Courier, monospace; border-color: black; border-radius: 4px;" name="command" id="command" placeholder="Please enter command">
+                <button type="submit" style="width: 100%; font-weight: bold; font-family: 'Courier New', Courier, monospace; border-radius: 4px; padding-left: 12px;">Send Command</button>
+            </form>
+        </div>
     </body>
 </html>

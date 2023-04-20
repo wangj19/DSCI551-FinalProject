@@ -15,7 +15,7 @@
         </script>
         
     </head>
-    <body>
+    <body style="display: flex; flex: 1; flex-direction: column; height:max-content; height: 100%;">
         <!-- Header -->
         <header>
           <h1>Book Management System</h1>
@@ -23,43 +23,55 @@
         
         <main>
           <!-- Add Book Buttion -->
-          <button id="add-book-btn">Add Book</button>
+          <button id="add-book-btn" style="margin-bottom: 15px; background-color: green; color: white; border-radius: 5px; border-width: 0; font-family: 'Courier New', Courier, monospace;">Add Book</button>
           <!-- Add Book Dialog Modal-->
-          <div id="add-book-dialog" class="dialog" style="display: none;">
-            <div class="dialog-content">
-              <span class="dialog-close">&times;</span>
+          <div id="add-book-dialog" class="dialog" style="display: none; display: none;
+          position: fixed;
+          z-index: 1; 
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background-color: rgba(0, 0, 0, 0.5);">
+            <div class="dialog-content" style="background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; border-radius: 8px; /* add a border radius of 4px */
+  border: 2px solid black;">
               <form id="add-book-form">
-                <label for="isbn">ISBN:</label>
+                <label for="isbn" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">ISBN:</label>
                 <input type="text" id="isbn-input" name="isbn"><br><br>
-                <label for="title">Title:</label>
+                <label for="title"  style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">Title:</label>
                 <input type="text" id="title-input" name="title"><br><br>
-                <label for="author">Author:</label>
+                <label for="author"  style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">Author:</label>
                 <input type="text" id="author-input" name="author"><br><br>
-                <label for="price">Price:</label>
+                <label for="price"  style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">Price:</label>
                 <input type="text" id="price-input" name="price"><br><br>
-                <label for="description">Description:</label>
+                <label for="description"  style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">Description:</label>
                 <textarea id="description-input" name="description"></textarea><br><br>
-                <button type="submit" class="dialog-button">Create</button>
-                <button id="cancel-button" type="button" class="dialog-button dialog-cancel-button">Cancel</button>
+                <button type="submit" class="dialog-button" style="box-shadow: 0 0 10px rgba(0,0,0,0.3);">Create</button>
+                <button id="cancel-button" type="button" class="dialog-button dialog-cancel-button" style="margin-top: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.3);">Cancel</button>
               </form>
             </div>
           </div>
 
           <!-- Table of book list -->
           <div class="container">
-              <table id="books-table">
+              <table id="books-table" style="text-align: left; font-family: 'Courier New', Courier, monospace;">
                 <thead>
                   <tr>
                     <th>ISBN</th>
                     <th>Title</th>
                     <th>Author</th>
-                    <th>Price</th>
+                    <th>Price</sth>
                     <th>Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for book in books %}
-                  <tr>
+                  <tr id="">
                     <td>{{ book['ISBN'] }}</td>
                     <td><a href="/book/{{ book['ISBN'] }}">{{ book['title'] }}</a></td>
                     <td>{{ book['author'] }}</td>

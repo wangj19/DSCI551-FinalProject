@@ -3,34 +3,32 @@
     <head>
         <link rel="stylesheet" href='/statics/css/login.css' />
         <title>Login</title>
-        <!-- <script>
-            alert("Page has been loaded successfully")
-        </script> -->
     </head>
-    <body>
-        <h1>LOGIN</h1>
-        <form action="action_page.php" method="post">
-            <div class="imgcontainer">
-                <img src="/statics/img/img_avatar.jpg" alt="Avatar" class="avatar">
-            </div>
+    <body style="background-color: #009879; justify-content: center; align-items: center; display: flex; padding: 12px; height: min-content;">
+        <div style="background-color: white; width: 600px; display: flex; align-items: center; flex-direction: column; justify-content: center; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+            <h1 style="font-family: 'Courier New', Courier, monospace; color: #009879;">LOGIN</h1>
+            <form action="action_page.php" method="post" style="border-radius: 4px; border-width: 1;">
+                <div class="imgcontainer">
+                    <img src="/statics/img/img_avatar.jpg" alt="Avatar" class="avatar">
+                </div>
 
-            <div class="container">
-                <label for="uname"><b>Username</b></label>
-                <input type="text" placeholder="Enter Username" name="uname" required>
+                <div class="container">
+                    <label for="uname" style="color: #009879;"><b>Username</b></label>
+                    <input type="text" placeholder="Enter Username" name="uname" required>
 
-                <label for="psw"><b>Password</b></label>
-                <input type="password" placeholder="Enter Password" name="psw" required>
+                    <label for="psw" style="color: #009879;"><b>Password</b></label>
+                    <input type="password" placeholder="Enter Password" name="psw" required>
 
-                <button type="submit">Login</button>
-                <label>
-                <input type="checkbox" checked="checked" name="remember"> Remember me
-                </label>
-            </div>
+                    <button type="submit">Login</button>
+                    <label>
+                    <input type="checkbox" checked="checked" name="remember"> Remember me
+                    </label>
+                </div>
 
-            <div class="container" style="background-color:#f1f1f1">
-                <button type="button" class="cancelbtn">Cancel</button>
-                <span class="psw">Forgot <a href="#">password?</a></span>
-            </div>
+                <div class="container" style="background-color:#f1f1f1">
+                    <button type="button" class="cancelbtn">Cancel</button>
+                    <span class="psw" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;"><a href="#">Forgot password?</a></span>
+                </div>
         </form>
+        </div>
     </body>
-  </html>

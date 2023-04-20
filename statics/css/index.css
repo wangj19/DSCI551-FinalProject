@@ -1,9 +1,16 @@
 
 /* Styles for the header */
+html, body {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
 header {
-  background-color: #333;
+  background-color: #009879;
   color: #fff;
   padding: 10px;
+  font-family: 'Courier New', Courier, monospace;
   margin-bottom: 30px; 
 }
 
@@ -15,6 +22,7 @@ header h1 {
 /* Styles for the main content */
 main {
   margin: 40px;
+  height: 100%;
 }
 
 main h2 {
@@ -29,23 +37,46 @@ table {
 
 /* Styles for the footer */
 footer {
-  background-color: #333;
+  background-color: #009879;
   color: #fff;
+  font-family: 'Courier New', Courier, monospace;
   padding: 10px;
   text-align: center;
 }
 
 
+#books-table {
+  border-collapse: collapse;
+  margin: 25px 0;
+  font-size: 0.9em;
+  min-width: 400px;
+  border-radius: 5px 5px 0px 0px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-bottom-color: #009879;
+}
 
 /* Customize the table header */
 #books-table thead th {
-  background-color: #60ba63;
-  color: white;
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+  font-weight: bold;
 }
 
 /* Alternate row colors */
-#books-table tbody tr:nth-child(even) {
-  background-color: #f2f2f2;
+
+
+#books-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+#books-table tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+#books-table tbody tr:last-of-type {
+  border-bottom: 2px solid #009879;
 }
 
 /* Hover effect on rows */
@@ -66,9 +97,11 @@ footer {
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
 
+
+
 /* Modal Content/Box */
 .modal-content {
-  background-color: #fefefe;
+  background-color: black;
   margin: 15% auto; /* 15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
@@ -115,9 +148,9 @@ textarea {
 /* Add Book Button */
 .add-book-button {
   display: inline-block;
-  background-color: #2c3e50;
+  background-color: #009879;
   color: white;
-  font-size: 16px;
+  font-size: 24px;
   font-weight: bold;
   border: none;
   border-radius: 4px;
@@ -125,6 +158,11 @@ textarea {
   margin-bottom: 20px;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+.add-book-form label {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
 }
 
 .add-book-button:hover {
