@@ -21,7 +21,7 @@ def index():
     books_data = []
     for book in books:
         data = book[list(book.keys())[0]]
-        book_data = dict({"ISBN": int(list(book.keys())[0]), "title": data["name"], "author": data["author"],
+        book_data = dict({"ISBN": str(list(book.keys())[0]), "title": data["name"], "author": data["author"],
                           "price": data["price"], "description": data["description"]})
         books_data.append(book_data)
     return render_template('index.html', books=books_data)
@@ -108,6 +108,13 @@ def delete_book(isbn):
         response = make_response(jsonify({"error": error_message}), 400)
         return response
     
+@socket_.on('delete')
+def handle_delete(message):
+    isbn = message['isbn']
+    print(isbn)
+    # delete book with given ISBN number
+    # send success or error message back to client
+    emit('response', {'success': "Success"})
 
 @app.route('/book/<isbn>')
 def book_detail(isbn):
@@ -119,6 +126,7 @@ def book_detail(isbn):
         book_data = dict({"ISBN": list(book.keys())[0], "title": data["name"], "author": data["author"],
                           "price": data["price"], "description": data["description"]})
     return render_template("book_detail.html", book_details = book_data)
+
 
 
 @app.route("/login")

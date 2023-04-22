@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isbn = document.getElementById('isbn-input').value;
         // send isbn to server to delete book
         try {
-            
+            // create WebSocket connection
             console.log(isbn)
             fetch(`/delete_book/${isbn}`, {
                 method: 'DELETE',
