@@ -123,7 +123,7 @@ def filter_process(content, condition_query):
                         break
                     if p in list(temp.keys()):
                         temp = temp[p]
-                        print(temp)
+                        # print(temp)
                     else:
                         existFlag = False
                         break
@@ -300,7 +300,7 @@ def process_GET(url, conditions):
         output = dict()
         for db_name in client.list_database_names():
             db_content = dict()
-            print(db_name)
+            # print(db_name)
             db = client[db_name]
             for col_name in db.list_collection_names():
                 col_content = dict()
@@ -418,7 +418,7 @@ def process_DELETE(url):
         to_remove = primary_key
         for k in parsed_url[4:]:
             to_remove = to_remove + "." + k
-        print(to_remove)
+        # print(to_remove)
         collection.update_one({primary_key: {'$exists': True}}, {
                               '$unset': {f'{to_remove}': 1}})
     return "DELETE http://" + url + ".json"
@@ -879,7 +879,7 @@ def command_process(command):
                 return "invalid command please enter a url with -d"
         elif parsed_command[2].upper() == "DELETE":
             # TODO: handle post command
-            print("DELETE")
+            # print("DELETE")
             return process_DELETE(db_url[7:-5])
         return parsed_command
     except Exception as e:
