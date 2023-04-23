@@ -3,8 +3,9 @@
     <head>
         <title>Book Detail</title>
         <link rel="stylesheet" type="text/css" href="../statics/css/book_detail.css">
-        <script src="../statics/js/book_detail_update.js"></script>
-        <script src="../statics/js/book_detail_delete.js"></script>
+        <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+        <script src="../statics/js/book_detail.js"></script>
+        <!-- <script src="../statics/js/book_detail_delete.js" type="module"></script> -->
     </head>
     <body>
         <!-- Header -->
@@ -38,14 +39,14 @@
             <div class="bottons">
                 <button type="button" class="btn btn-primary" id="update-btn" >Edit</button>              
                 <button type="button" id="delete-btn" class="btn btn-danger" >Delete</button>
-                    <button type="button" class="btn btn-danger" id="cancel-update-btn" style="display:none;">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="confirm-update-btn" style="display:none;">Save</button>
+                <button type="button" class="btn btn-danger" id="cancel-update-btn" style="display:none;">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm-update-btn" style="display:none;">Save</button>
             </div>
             <div id="confirmation-window" style="display: none;">
                 <div class="confirmation-dialog">
                     <p>Are you sure you want to delete this book with ISBN {{book_details.ISBN}} ?</p>
                     <div class="button-container">
-                        <button id="confirm-delete">Delete</button>
+                        <button id="confirm-delete">Confirm</button>
                         <button id="cancel-delete">Cancel</button>
                     </div>
                 </div>

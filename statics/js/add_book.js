@@ -10,6 +10,19 @@ document.addEventListener('DOMContentLoaded', function() {
   // Get the add book form element
   var addBookForm = document.getElementById('add-book-form');
 
+  // Create the socket and set up ON's
+  var socket = io.connect("http://localhost:5000");
+  socket.on('book_created', function(title_) {
+    location.reload(); // Reload the book page
+    alert("Successfully Create New Book - " + title_)
+    console.log('New book added:', newBook);
+});
+// socket process failed update
+socket.on('create_fail', function(error_message) {
+    console.log("Error message of Create: " + error_message)
+    alert("Error message of Create: " + error_message);
+});
+
   // Add a click event listener to the add book button
   addBookBtn.addEventListener('click', function() {
     // Display the add book dialog
@@ -57,37 +70,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Construct the new book object
     var newBook = {
       'isbn': isbnInput.value,
-      'title': titleInput.value,
+      'title': title,
       'author': authorInput.value,
       'price': price,
       'description': descriptionInput.value
     };
-    fetch('/add_book', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newBook)
-    }).then(function(response) {
-      if (response.status !== 200) {
-          // handle error response
-          response.json().then(function(data) {
-          console.log("Error message: " + data.error);
-          alert("Error message: " + data.error);
-        });
-      } else {
-        // handle success response
-        response.json().then(function(data) {
-          // Book added successfully, do something here
-          location.reload(); // Reload the book page
-          // print sth in console
-          alert("Successfully Insert New Book - " + title)
-          console.log('New book added:', newBook);
-        });
-      }
-    }).catch(function(err) {
-      console.log("Fetch error: " + err);
-    });
+    if (confirm("Are you sure you want to create this book with title - " + title + "?")) {
+      // emit a message to the server to delete the book
+      socket.emit('create', newBook);
+    }
+
+
+    // fetch('/add_book', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify(newBook)
+    // }).then(function(response) {
+    //   if (response.status !== 200) {
+    //       // handle error response
+    //       response.json().then(function(data) {
+    //       console.log("Error message: " + data.error);
+    //       alert("Error message: " + data.error);
+    //     });
+    //   } else {
+    //     // handle success response
+    //     response.json().then(function(data) {
+    //       // Book added successfully, do something here
+    //       location.reload(); // Reload the book page
+    //       // print sth in console
+    //       alert("Successfully Insert New Book - " + title)
+    //       console.log('New book added:', newBook);
+    //     });
+    //   }
+    // }).catch(function(err) {
+    //   console.log("Error message of Add: " + err);
+    // });
   });
     
 });
