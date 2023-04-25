@@ -32,6 +32,8 @@ def filter_process(content, condition_query):
     output = []
     if content is None:
         return content
+    elif isinstance(content, str):
+        return content
     elif isinstance(content, dict):
         for item in content.items():
             document = {item[0]: item[1]}
@@ -40,7 +42,8 @@ def filter_process(content, condition_query):
         return content
     else:
         output = content
-
+    if len(output) == 0: 
+        return None
     # process filter without orderby condition
     if orderBy is None:
         if limitValue is not None:

@@ -103,6 +103,7 @@ def handle_update(new):
 
 @socket_.on("command")
 def handle_command_(command):
+    print(command)
     output = str(mf.command_process(command))
     # print(output)
     emit("command_output", output)
