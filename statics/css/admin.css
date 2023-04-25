@@ -29,3 +29,18 @@ form {
     opacity: 0.8;
   }
 
+  .container {
+    position: relative;
+  }
+
+  .output-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .command-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+

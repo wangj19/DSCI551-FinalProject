@@ -101,7 +101,12 @@ def handle_update(new):
         emit("update_fail", error_message)
         return False
 
-
+@socket_.on("command")
+def handle_command_(command):
+    output = str(mf.command_process(command))
+    # print(output)
+    emit("command_output", output)
+    return True
 
 @app.route('/')
 def index():
@@ -137,96 +142,97 @@ def admin_page():
     return render_template("admin.html", async_mode=socket_.async_mode)
 
 
-@app.route("/handle_command", methods=["POST"])
-def handle_command():
-    command = request.form["command"]
-    results = mf.command_process(command)
-    return (str(results))
+# @app.route("/handle_command")
+# def handle_command():
+#     command = request.form["command"]
+#     results = mf.command_process(command)
+#     return str(results)
 
 
 
 # HTTP fetch process
-@app.route('/add_book', methods=['POST'])
-def add_book():
-    try:
-        new_book = request.json
-        # check if the ISBN number alreadys exists or not
-        books = dict()
-        for book in books_collection.find({}, {"_id": 0}):
-            books.update(book)
-        isbn = new_book["isbn"]
-        name = new_book["title"]
-        author = new_book["author"]
-        price = new_book["price"]
-        description = new_book["description"]
-        if isbn in list(books.keys()):
-            error_message = "This ISBN number already exists."
-            response = make_response(jsonify({"error": error_message}), 400)
-            return response
-        # Do something with the new_book data here
-        new_data = {isbn: {"name":name, "author": author, "price": price, 
-            "description": description}}
-        books_collection.insert_one(new_data)
-        success_message = "Success!"
-        response = make_response(jsonify({"message": success_message}), 200)
-        return response
+# This part is no more used for our APP
+# @app.route('/add_book', methods=['POST'])
+# def add_book():
+#     try:
+#         new_book = request.json
+#         # check if the ISBN number alreadys exists or not
+#         books = dict()
+#         for book in books_collection.find({}, {"_id": 0}):
+#             books.update(book)
+#         isbn = new_book["isbn"]
+#         name = new_book["title"]
+#         author = new_book["author"]
+#         price = new_book["price"]
+#         description = new_book["description"]
+#         if isbn in list(books.keys()):
+#             error_message = "This ISBN number already exists."
+#             response = make_response(jsonify({"error": error_message}), 400)
+#             return response
+#         # Do something with the new_book data here
+#         new_data = {isbn: {"name":name, "author": author, "price": price, 
+#             "description": description}}
+#         books_collection.insert_one(new_data)
+#         success_message = "Success!"
+#         response = make_response(jsonify({"message": success_message}), 200)
+#         return response
     
-    except Exception as e:
-        error_message = str(e)
-        response = make_response(jsonify({"error": error_message}), 400)
-        return response
+#     except Exception as e:
+#         error_message = str(e)
+#         response = make_response(jsonify({"error": error_message}), 400)
+#         return response
 
-@app.route('/update_book', methods=['PUT'])
-def update_book():
-    try:
-        new_book = request.json
-        # check if the ISBN number alreadys exists or not
-        books = dict()
-        for book in books_collection.find({}, {"_id": 0}):
-            books.update(book)
-        isbn = new_book["isbn"]
-        name = new_book["title"]
-        author = new_book["author"]
-        price = new_book["price"]
-        description = new_book["description"]
-        if isbn not in list(books.keys()):
-            error_message = "Invalid ISBN number!"
-            response = make_response(jsonify({"error": error_message}), 400)
-            return response
-        # Do something with the new_book data here
-        new_data = {"$set": {isbn: {"name":name, "author": author, "price": price, 
-            "description": description}}}
-        filter = {isbn: {"$exists": True}}
-        books_collection.update_one(filter, new_data)
-        success_message = "Success!"
-        response = make_response(jsonify({"message": success_message}), 200)
-        return response
+# @app.route('/update_book', methods=['PUT'])
+# def update_book():
+#     try:
+#         new_book = request.json
+#         # check if the ISBN number alreadys exists or not
+#         books = dict()
+#         for book in books_collection.find({}, {"_id": 0}):
+#             books.update(book)
+#         isbn = new_book["isbn"]
+#         name = new_book["title"]
+#         author = new_book["author"]
+#         price = new_book["price"]
+#         description = new_book["description"]
+#         if isbn not in list(books.keys()):
+#             error_message = "Invalid ISBN number!"
+#             response = make_response(jsonify({"error": error_message}), 400)
+#             return response
+#         # Do something with the new_book data here
+#         new_data = {"$set": {isbn: {"name":name, "author": author, "price": price, 
+#             "description": description}}}
+#         filter = {isbn: {"$exists": True}}
+#         books_collection.update_one(filter, new_data)
+#         success_message = "Success!"
+#         response = make_response(jsonify({"message": success_message}), 200)
+#         return response
     
-    except Exception as e:
-        error_message = str(e)
-        response = make_response(jsonify({"error": error_message}), 400)
-        return response
+#     except Exception as e:
+#         error_message = str(e)
+#         response = make_response(jsonify({"error": error_message}), 400)
+#         return response
 
-@app.route('/delete_book/<isbn>', methods=['DELETE'])
-def delete_book(isbn):
-    try:
-        print(isbn)
-        books = dict()
-        for book in books_collection.find({}, {"_id": 0}):
-            books.update(book)
-        if isbn not in list(books.keys()):
-            error_message = "Invalid ISBN number!"
-            response = make_response(jsonify({"error": error_message}), 400)
-            return response
-        filter = {isbn: {"$exists": True}}
-        books_collection.delete_one(filter)
-        success_message = "Success!"
-        response = make_response(jsonify({"message": success_message}), 200)
-        return response
-    except Exception as e:
-        error_message = str(e)
-        response = make_response(jsonify({"error": error_message}), 400)
-        return response
+# @app.route('/delete_book/<isbn>', methods=['DELETE'])
+# def delete_book(isbn):
+#     try:
+#         print(isbn)
+#         books = dict()
+#         for book in books_collection.find({}, {"_id": 0}):
+#             books.update(book)
+#         if isbn not in list(books.keys()):
+#             error_message = "Invalid ISBN number!"
+#             response = make_response(jsonify({"error": error_message}), 400)
+#             return response
+#         filter = {isbn: {"$exists": True}}
+#         books_collection.delete_one(filter)
+#         success_message = "Success!"
+#         response = make_response(jsonify({"message": success_message}), 200)
+#         return response
+#     except Exception as e:
+#         error_message = str(e)
+#         response = make_response(jsonify({"error": error_message}), 400)
+#         return response
     
 # run app
 if __name__ == '__main__':
