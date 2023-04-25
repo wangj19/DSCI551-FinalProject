@@ -463,21 +463,29 @@ def process_PUT(url, data):
             documents.update(document)
         # check if the user inserted an existing ISBN or not.
         # If it exists, use the existing ID and make new ID if it does not exist
-        if len(list(js.keys())) != 1:
-            # make new ISBN using random number generator and
-            # make it str to assign it as Primary Key / ISBN of new data
-            id = str(generate_random_number(documents.keys()))
-            js = {id: js}
-        else:
-            # make it str to assign it as Primary Key / ISBN of new data
-            id = str(list(documents.keys())[0])
-            js = {id: js}
-        # if document id exist already: do update_one
-        if id in list(documents.keys()):
-            collection.update_one({id: {"$exists": True}}, {"$set": js})
+
+        for key in list(js.keys()):
+            js_data = {key: js[key]}
+            if key in list(documents.keys()):
+                collection.update_one({key: {"$exists": True}}, {"$set": js_data})
         ## else: do insert_ones
-        else:
-            collection.insert_one(js)
+            else:
+                collection.insert_one(js_data)
+        # if len(list(js.keys())) != 1:
+        #     # make new ISBN using random number generator and
+        #     # make it str to assign it as Primary Key / ISBN of new data
+        #     id = str(generate_random_number(documents.keys()))
+        #     js = {id: js}
+        # else:
+        #     # make it str to assign it as Primary Key / ISBN of new data
+        #     id = str(list(documents.keys())[0])
+        #     js = {id: js}
+        # # if document id exist already: do update_one
+        # if id in list(documents.keys()):
+        #     collection.update_one({id: {"$exists": True}}, {"$set": js})
+        # ## else: do insert_ones
+        # else:
+        #     collection.insert_one(js)
     else:
         document_id = parsed_url[3]
         json_keys = parsed_url[3:]
@@ -633,6 +641,7 @@ def generate_random_number(existing_keys):
         if new_key not in existing_keys_set:
             # If the new random number is unique, return it
             return int(new_key)
+
 def process_PATCH(url, data):
     # Parse the data we get from client
     # curl -X PATCH "http://localhost:27017/DSCI551/books/1234567890.json"
@@ -666,23 +675,30 @@ def process_PATCH(url, data):
         for document in collection.find({}, {"_id": 0}):
             documents.update(document)
 
+        for key in list(formatted_data.keys()):
+            js_data = {key: formatted_data[key]}
+            if key in list(documents.keys()):
+                collection.update_one({key: {"$exists": True}}, {"$set": js_data})
+        ## else: do insert_ones
+            else:
+                collection.insert_one(js_data)
         # check if the user inserted an existing ISBN or not.
         # If it exists, use the existing ID and make new ID if it does not exist
-        if len(list(formatted_data.keys())) != 1:
-            # make new ISBN using random number generator and
-            # make it str to assign it as Primary Key / ISBN of new data
-            id = str(generate_random_number(documents.keys()))
-            formatted_data = {id: formatted_data}
-        else:
-            # make it str to assign it as Primary Key / ISBN of new data
-            id = str(list(documents.keys())[0])
-            formatted_data = {id: formatted_data}
-        # if document id exist already: do update_one
-        if id in list(documents.keys()):
-            collection.update_one({id: {"$exists": True}}, {"$set": formatted_data})
-        # else: do insert_ones
-        else:
-            collection.insert_one(formatted_data)
+        # if len(list(formatted_data.keys())) != 1:
+        #     # make new ISBN using random number generator and
+        #     # make it str to assign it as Primary Key / ISBN of new data
+        #     id = str(generate_random_number(documents.keys()))
+        #     formatted_data = {id: formatted_data}
+        # else:
+        #     # make it str to assign it as Primary Key / ISBN of new data
+        #     id = str(list(documents.keys())[0])
+        #     formatted_data = {id: formatted_data}
+        # # if document id exist already: do update_one
+        # if id in list(documents.keys()):
+        #     collection.update_one({id: {"$exists": True}}, {"$set": formatted_data})
+        # # else: do insert_ones
+        # else:
+        #     collection.insert_one(formatted_data)
     else:
         document_id = parsed_url[3]
         json_keys = parsed_url[3:]
@@ -789,7 +805,7 @@ def command_process(command):
         # parse command by spaces
         # curl -X GET "http://localhost:27017/DSCI551/books.json?orderBy='price'&limitToFirst=5"
         parsed_command = command.split(" ")
-        print(parsed_command)
+        # print(parsed_command)
         # check if the command starts with "curl"
         if parsed_command[0].lower() != "curl":
             return "Invalid Command: only accept curl command"
